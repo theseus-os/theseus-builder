@@ -1,4 +1,6 @@
-## theseus-builder
+## theseus-builder [WIP]
+
+This is not officially in use at the moment.
 
 ### Steps to get it working
 
