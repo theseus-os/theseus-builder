@@ -1,0 +1,19 @@
+cargo-path = "cargo"
+arch = "x86_64"
+
+[prefixes]
+kernel = "k#"
+applications = "a#"
+executables = "e#"
+
+[build-cells]
+cargo-target = "x86_64-theseus"
+build-mode = "release"
+other-cargo-flags = []
+other-rust-flags = []
+
+[link-nano-core]
+linker = "ld"
+
+[serialize-nano-core-syms]
+readelf = "readelf"

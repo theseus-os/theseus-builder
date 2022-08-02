@@ -1,0 +1,2 @@
+[build-cells]
+toolchain = "nightly"
