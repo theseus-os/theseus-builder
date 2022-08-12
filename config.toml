@@ -1,4 +1,6 @@
 theseus-root = "../theseus"
 
 [build-cells]
+cargo-target = "../rust/x86_64-theseus.json"
+cargo-target-name = "x86_64-theseus"
 toolchain = "theseus"

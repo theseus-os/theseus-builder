@@ -4,9 +4,9 @@ This is not officially in use at the moment.
 
 ### Steps to get it working
 
-a. Get `cfg`, `kernel`, `libs`, `ports` directories from the main theseus repository.
-b. Create a workspace manifest in kernel, cherry pick lines from theseus's workspace manifest.
-c. run `cargo +nightly run -r` in the repository.
+a. In `config.toml` and `Cargo.toml`, set the correct path to your copy of theseus.
+b. In `config.toml`, set the correct toolchain & target spec to use.
+c. build and run this crate with a nightly/dev toolchain.
 
 ### Build Stages & TODO
 
