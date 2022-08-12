@@ -11,6 +11,7 @@ use toml::Value;
 
 use pico_args::Arguments;
 
+mod directories;
 mod build_cells;
 mod link_nano_core;
 mod serialize_nano_core_syms;
@@ -44,6 +45,7 @@ fn main() {
         };
 
         let steps = [
+            directories::process,
             build_cells::process,
             link_nano_core::process,
             serialize_nano_core_syms::process,

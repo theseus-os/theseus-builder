@@ -1,2 +1,4 @@
+theseus-root = "../theseus"
+
 [build-cells]
-toolchain = "nightly"
+toolchain = "theseus"

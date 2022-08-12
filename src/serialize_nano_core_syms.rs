@@ -16,15 +16,18 @@ pub fn process(config: &Value) {
 
     log!(stage, "reading configuration");
 
+    let root = opt_str(config, &["theseus-root"]);
+    let build_dir = opt_str(config, &["build-dir"]);
+
     let kernel_prefix = opt_str(config, &["prefixes", "kernel"]);
     let readelf = opt_str(config, &["serialize-nano-core-syms", "readelf"]);
     let arch = opt_str(config, &["arch"]);
 
-    let output_path = format!("build/isofiles/modules/{}nano_core.serde", &kernel_prefix);
+    let output_path = format!("{}/isofiles/modules/{}nano_core.serde", &build_dir, &kernel_prefix);
 
     log!(stage, "extracting symbol information");
 
-    let nano_core_bin = format!("build/nano_core/nano_core-{}.bin", arch);
+    let nano_core_bin = format!("{}/nano_core/nano_core-{}.bin", &build_dir, arch);
 
     let result = Command::new(readelf)
         .arg("-W")

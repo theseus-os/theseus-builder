@@ -15,7 +15,10 @@ pub fn process(config: &Value) {
 
     let rust_features: [&str; 0] = [];
 
-    let cargo = opt_str(config, &["cargo-path"]);
+    let root = opt_str(config, &["theseus-root"]);
+    let build_dir = opt_str(config, &["build-dir"]);
+
+    let cargo = opt_str(config, &["cargo"]);
     let target = opt_str(config, &["build-cells", "cargo-target"]);
     let build_mode = opt_str(config, &["build-cells", "build-mode"]);
     let toolchain = opt_str(config, &["build-cells", "toolchain"]);
@@ -79,12 +82,14 @@ pub fn process(config: &Value) {
             .env("RUSTFLAGS", rust_flags.join(" "))
             .arg(&format!("+{}", &toolchain))
             .arg("build")
-            .arg("--manifest-path=kernel/Cargo.toml")
+            .arg(&format!("--manifest-path={}/kernel/nano_core/Cargo.toml", &root))
             .arg(&format!("--{}", &build_mode))
             .args(cargo_flags)
             .args(rust_features)
+            .arg("--target-dir")
+            .arg(&format!("{}/target", &build_dir))
             .arg("--target")
-            .arg(&format!("cfg/{}.json", &target))
+            .arg(&format!("{}/{}", &root, &target))
             .status();
 
     check_result(stage, result, "cargo invocation failed");

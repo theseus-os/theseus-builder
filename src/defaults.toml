@@ -1,5 +1,7 @@
-cargo-path = "cargo"
+cargo = "cargo"
 arch = "x86_64"
+theseus-root = "."
+build-dir = "build"
 
 [prefixes]
 kernel = "k#"
@@ -7,11 +9,14 @@ applications = "a#"
 executables = "e#"
 
 [build-cells]
-cargo-target = "x86_64-theseus"
+# relative to theseus-root
+cargo-target = "../rust/x86_64-theseus.json"
+cargo-target-name = "x86_64-theseus"
 build-mode = "release"
 other-cargo-flags = []
 other-rust-flags = []
-build-std = ["core", "alloc"]
+# build-std = ["core", "alloc"]
+build-std = []
 build-std-features = ["compiler-builtins-mem"]
 
 [link-nano-core]
