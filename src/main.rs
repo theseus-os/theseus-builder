@@ -6,6 +6,8 @@ use std::process::ExitStatus;
 use std::path::Path;
 use std::io::Error;
 use std::io::ErrorKind;
+use std::ffi::OsString;
+use std::mem::swap;
 
 use toml::Value;
 use toml::map::Map;
@@ -45,40 +47,7 @@ fn main() {
             Err(e) => oops!("parsing config", "{}", e),
         };
 
-        for arg in args.finish() {
-            let arg = arg.into_string().expect("arguments must be valid UTF-8");
-            let mut config = &mut config;
-            let mut key = String::new();
-            let mut value = String::new();
-            let mut collect = false;
-            for c in arg.chars() {
-                if collect {
-                    value.push(c);
-                } else if c == '.' {
-                    if config.get(&key).is_none() {
-                        let config = config.as_table_mut().unwrap();
-                        config.insert(key.clone(), Value::from(Map::new()));
-                    }
-                    config = config.get_mut(&key).unwrap();
-                    key = String::new();
-                } else if c == '=' {
-                    collect = true;
-                } else {
-                    key.push(c);
-                }
-            }
-            let value = if let Ok(integer) = value.parse::<i64>() {
-                Value::Integer(integer)
-            } else if let Ok(float) = value.parse::<f64>() {
-                Value::Float(float)
-            } else if let Ok(boolean) = value.parse::<bool>() {
-                Value::Boolean(boolean)
-            } else {
-                Value::String(value)
-            };
-            let config = config.as_table_mut().unwrap();
-            config.insert(key, value);
-        }
+        apply_overrides(&mut config, args.finish());
 
         let steps = [
             directories::process,
@@ -91,6 +60,80 @@ fn main() {
 
         for step in steps {
             step(&config);
+        }
+    }
+}
+
+fn get_config(mut config: &mut Value, mut path: Vec<String>) -> (&mut Value, String) {
+    let last = path.pop().expect("invalid override key");
+    for key in path {
+        if config.get(&key).is_none() {
+            let config = config.as_table_mut().unwrap();
+            config.insert(key.clone(), Value::from(Map::new()));
+        }
+        config = config.get_mut(&key).unwrap();
+    }
+    (config, last)
+}
+
+fn parse_toml_value(value: String) -> Value {
+    println!("value: {}", &value);
+    if let Ok(integer) = value.parse::<i64>() {
+        Value::Integer(integer)
+    } else if let Ok(float) = value.parse::<f64>() {
+        Value::Float(float)
+    } else if let Ok(boolean) = value.parse::<bool>() {
+        Value::Boolean(boolean)
+    } else {
+        Value::String(value)
+    }
+}
+
+fn apply_overrides(config: &mut Value, override_args: Vec<OsString>) {
+    let mut array = None;
+    for arg in override_args {
+        let arg = arg.into_string().expect("arguments must be valid UTF-8");
+
+        if let Some((mut vec, path)) = array.take() {
+            if arg == "]" {
+                let (config, key) = get_config(config, path);
+                let config = config.as_table_mut().unwrap();
+                config.insert(key, Value::Array(vec));
+                array = None;
+            } else {
+                vec.push(parse_toml_value(arg));
+                array = Some((vec, path));
+            }
+
+        } else {
+
+            let mut path = Vec::new();
+            let mut key = String::new();
+            let mut value = String::new();
+            let mut collect = false;
+            for c in arg.chars() {
+                if collect {
+                    value.push(c);
+                } else if c == '.' {
+                    let mut tmp = String::new();
+                    swap(&mut tmp, &mut key);
+                    path.push(tmp);
+                } else if c == '=' {
+                    collect = true;
+                } else {
+                    key.push(c);
+                }
+            }
+            path.push(key);
+            if value == "[" {
+                array = Some((Vec::new(), path));
+            } else {
+                let (config, key) = get_config(config, path);
+                let value = parse_toml_value(value);
+                let config = config.as_table_mut().unwrap();
+                config.insert(key, value);
+            }
+
         }
     }
 }

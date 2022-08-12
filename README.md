@@ -27,6 +27,11 @@ cargo run -r -- build-cells.build-mode=debug
 
 # if a value can be parsed as a boolean or a number, it will be:
 cargo run -r -- custom-stage.bypass=true
+
+# arrays are OK too, just stick the `[` to the `=`,
+# add a white space before and after each element,
+# and don't use any comma:
+cargo run -r -- build-cells.build-std=[ "core" "alloc" ]
 ```
 
 ### Build Stages & TODO

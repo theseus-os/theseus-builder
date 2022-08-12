@@ -16,7 +16,6 @@ pub fn process(config: &Value) {
 
     log!(stage, "reading configuration");
 
-    let root = opt_str(config, &["theseus-root"]);
     let build_dir = opt_str(config, &["build-dir"]);
 
     let kernel_prefix = opt_str(config, &["prefixes", "kernel"]);
