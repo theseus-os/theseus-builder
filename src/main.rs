@@ -14,6 +14,7 @@ use toml::map::Map;
 
 use pico_args::Arguments;
 
+mod discover;
 mod directories;
 mod build_cells;
 mod link_nano_core;
@@ -50,6 +51,7 @@ fn main() {
         apply_overrides(&mut config, args.finish());
 
         let steps = [
+            discover::process,
             directories::process,
             build_cells::process,
             link_nano_core::process,
@@ -77,7 +79,6 @@ fn get_config(mut config: &mut Value, mut path: Vec<String>) -> (&mut Value, Str
 }
 
 fn parse_toml_value(value: String) -> Value {
-    println!("value: {}", &value);
     if let Ok(integer) = value.parse::<i64>() {
         Value::Integer(integer)
     } else if let Ok(float) = value.parse::<f64>() {

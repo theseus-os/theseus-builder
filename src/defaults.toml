@@ -2,6 +2,7 @@ cargo = "cargo"
 arch = "x86_64"
 theseus-root = "."
 build-dir = "build"
+discover = []
 
 [prefixes]
 kernel = "k#"
