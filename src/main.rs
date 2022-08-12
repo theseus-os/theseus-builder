@@ -8,6 +8,7 @@ use std::io::Error;
 use std::io::ErrorKind;
 
 use toml::Value;
+use toml::map::Map;
 
 use pico_args::Arguments;
 
@@ -39,10 +40,45 @@ fn main() {
             Err(e) => oops!("reading config", "{}", e),
         };
 
-        let config = match cfg_string.parse::<Value>() {
-            Ok(cfg_string) => cfg_string,
+        let mut config = match cfg_string.parse::<Value>() {
+            Ok(value) => value,
             Err(e) => oops!("parsing config", "{}", e),
         };
+
+        for arg in args.finish() {
+            let arg = arg.into_string().expect("arguments must be valid UTF-8");
+            let mut config = &mut config;
+            let mut key = String::new();
+            let mut value = String::new();
+            let mut collect = false;
+            for c in arg.chars() {
+                if collect {
+                    value.push(c);
+                } else if c == '.' {
+                    if config.get(&key).is_none() {
+                        let config = config.as_table_mut().unwrap();
+                        config.insert(key.clone(), Value::from(Map::new()));
+                    }
+                    config = config.get_mut(&key).unwrap();
+                    key = String::new();
+                } else if c == '=' {
+                    collect = true;
+                } else {
+                    key.push(c);
+                }
+            }
+            let value = if let Ok(integer) = value.parse::<i64>() {
+                Value::Integer(integer)
+            } else if let Ok(float) = value.parse::<f64>() {
+                Value::Float(float)
+            } else if let Ok(boolean) = value.parse::<bool>() {
+                Value::Boolean(boolean)
+            } else {
+                Value::String(value)
+            };
+            let config = config.as_table_mut().unwrap();
+            config.insert(key, value);
+        }
 
         let steps = [
             directories::process,

@@ -8,6 +8,25 @@ a. In `config.toml` and `Cargo.toml`, set the correct path to your copy of these
 b. In `config.toml`, set the correct toolchain & target spec to use.
 c. build and run this crate with a nightly/dev toolchain.
 
+### Configuration overrides
+
+Suppose you have this command-line to run this builder:
+```sh
+cargo run -r
+```
+
+You can override properties from the configuration by adding arguments like so:
+```sh
+# simple string:
+cargo run -r -- theseus-root="../my-other-theseus-copy"
+
+# accessing table fields:
+cargo run -r -- build-cells.build-mode=debug
+
+# if a value can be parsed as a boolean or a number, it will be:
+cargo run -r -- custom-stage.bypass=true
+```
+
 ### Build Stages & TODO
 
 |  | Stage | What it does |

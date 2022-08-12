@@ -1,6 +1,5 @@
 use crate::log;
 use crate::opt_str;
-use crate::try_create_dir;
 use crate::check_result;
 
 use std::process::Command;
