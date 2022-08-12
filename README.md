@@ -5,7 +5,9 @@ This is not officially in use at the moment.
 ### Steps to get it working
 
 a. In `config.toml` and `Cargo.toml`, set the correct path to your copy of theseus.
+
 b. In `config.toml`, set the correct toolchain & target spec to use.
+
 c. build and run this crate with a nightly/dev toolchain.
 
 ### Configuration overrides
