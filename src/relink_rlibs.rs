@@ -19,9 +19,7 @@ use std::io::copy;
 use std::str::from_utf8;
 
 pub fn process(config: &Value) {
-    let stage = "relinking rlibs";
-
-    log!(stage, "reading configuration");
+    let stage = "relink-rlibs";
 
     let build_dir = opt_str(config, &["build-dir"]);
 
@@ -52,7 +50,7 @@ pub fn process(config: &Value) {
                 print!("{:70}\r", "");
                 log!(stage, "relinking {}", &name);
 
-                try_create_dir(&tmp_dir);
+                try_create_dir(&tmp_dir, false);
 
                 let mut object_files = Vec::with_capacity(count - 1);
                 while let Some(entry_result) = archive.next_entry() {

@@ -12,9 +12,7 @@ use bincode::config::standard;
 use rustc_demangle::demangle;
 
 pub fn process(config: &Value) {
-    let stage = "serializing nano_core symbols";
-
-    log!(stage, "reading configuration");
+    let stage = "serialize-nano_core-syms";
 
     let build_dir = opt_str(config, &["build-dir"]);
 

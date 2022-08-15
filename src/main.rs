@@ -1,4 +1,5 @@
 use std::fs::read_to_string;
+use std::fs::create_dir_all;
 use std::fs::create_dir;
 use std::fs::read_dir;
 use std::fmt::Display;
@@ -21,6 +22,7 @@ mod build_cells;
 mod link_nano_core;
 mod serialize_nano_core_syms;
 mod relink_rlibs;
+mod copy_crate_objects;
 
 pub fn die() -> ! {
     exit(1)
@@ -42,12 +44,12 @@ fn main() {
 
         let cfg_string = match read_to_string(&config_path) {
             Ok(cfg_string) => cfg_string,
-            Err(e) => oops!("reading config", "{}", e),
+            Err(e) => oops!("main", "{}", e),
         };
 
         let mut config = match cfg_string.parse::<Value>() {
             Ok(value) => value,
-            Err(e) => oops!("parsing config", "{}", e),
+            Err(e) => oops!("main", "{}", e),
         };
 
         apply_overrides(&mut config, args.finish());
@@ -59,9 +61,10 @@ fn main() {
             link_nano_core::process,
             serialize_nano_core_syms::process,
             relink_rlibs::process,
+            copy_crate_objects::process,
         ];
 
-        log!("parsing config", "configuration was parsed successfully");
+        log!("main", "configuration was parsed successfully");
 
         for step in steps {
             step(&config);
@@ -170,8 +173,12 @@ fn check_result(stage: &str, result: Result<ExitStatus, Error>, errmsg: &str) {
     }
 }
 
-fn try_create_dir<P: AsRef<Path> + Display>(path: P) {
-    if let Err(e) = create_dir(&path) {
+fn try_create_dir<P: AsRef<Path> + Display>(path: P, all: bool) {
+    let op = match all {
+        true => create_dir_all,
+        _    => create_dir,
+    };
+    if let Err(e) = op(&path) {
         if e.kind() != ErrorKind::AlreadyExists {
             println!("could not create directory: {}", path);
             crate::die();

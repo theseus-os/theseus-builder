@@ -8,9 +8,7 @@ use std::process::Command;
 use toml::Value;
 
 pub fn process(config: &Value) {
-    let stage = "linking nano_core";
-
-    log!(stage, "reading configuration");
+    let stage = "link-nano_core";
 
     let root = opt_str(config, &["theseus-root"]);
     let build_dir = opt_str(config, &["build-dir"]);

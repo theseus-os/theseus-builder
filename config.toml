@@ -4,3 +4,6 @@ theseus-root = "../theseus"
 cargo-target = "../rust/x86_64-theseus.json"
 cargo-target-name = "x86_64-theseus"
 toolchain = "theseus"
+
+[copy-crate-objects]
+extra-target-dirs = [ "../rust/build/x86_64-unknown-linux-gnu/stage2-std" ]

@@ -29,3 +29,8 @@ readelf = "readelf"
 [relink-rlibs]
 linker = "ld"
 remove-rlibs-dirs = true
+
+[copy-crate-objects]
+extra-target-dirs = [ ]
+extra-apps = [ "libtheseus" ]
+debug-crate-objects = false

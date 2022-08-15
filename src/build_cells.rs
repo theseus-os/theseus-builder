@@ -9,9 +9,7 @@ use std::process::Command;
 use toml::Value;
 
 pub fn process(config: &Value) {
-    let stage = "building cells";
-
-    log!(stage, "reading configuration");
+    let stage = "build-cells";
 
     let rust_features: [&str; 0] = [];
 

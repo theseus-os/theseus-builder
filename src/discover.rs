@@ -9,14 +9,10 @@ use crate::list_dir;
 use toml::Value;
 
 pub fn process(config: &Value) {
-    let stage = "discovering theseus crates";
-
-    log!(stage, "reading configuration");
+    let stage = "discover";
 
     let root = opt_str(config, &["theseus-root"]);
     let discover = opt_str_vec(config, &["discover"]);
-
-    log!(stage, "discovering ");
 
     for subdir in &discover {
         log!(stage, "discovering {}", subdir);
