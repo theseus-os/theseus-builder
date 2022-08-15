@@ -1,9 +1,9 @@
 use crate::log;
 use crate::opt_str;
 use crate::check_result;
+use crate::list_dir;
 
 use std::process::Command;
-use std::fs::read_dir;
 
 use toml::Value;
 
@@ -27,9 +27,7 @@ pub fn process(config: &Value) {
     let asm_sources_dir = format!("{}/kernel/nano_core/src/boot/arch_{}", &root, arch);
     let mut asm_object_files = Vec::new();
 
-    for entry in read_dir(&asm_sources_dir).unwrap() {
-        let entry = entry.unwrap();
-        let name = entry.file_name().into_string().unwrap();
+    for (name, _is_dir) in list_dir(stage, &asm_sources_dir) {
         let mut split = name.split(".asm");
         let prefix = split.next();
         if split.next().is_some() {

@@ -1,5 +1,6 @@
 use std::fs::read_to_string;
 use std::fs::create_dir;
+use std::fs::read_dir;
 use std::fmt::Display;
 use std::process::exit;
 use std::process::ExitStatus;
@@ -19,6 +20,7 @@ mod directories;
 mod build_cells;
 mod link_nano_core;
 mod serialize_nano_core_syms;
+mod relink_rlibs;
 
 pub fn die() -> ! {
     exit(1)
@@ -56,6 +58,7 @@ fn main() {
             build_cells::process,
             link_nano_core::process,
             serialize_nano_core_syms::process,
+            relink_rlibs::process,
         ];
 
         log!("parsing config", "configuration was parsed successfully");
@@ -176,6 +179,22 @@ fn try_create_dir<P: AsRef<Path> + Display>(path: P) {
     }
 }
 
+fn list_dir<P: AsRef<Path> + Display>(stage: &str, path: P) -> Vec<(String, bool)> {
+    let inner = |path| -> Option<Vec<(String, bool)>> {
+        let mut out = Vec::new();
+        let iter = read_dir(&path).ok()?;
+        for entry in iter {
+            let entry = entry.ok()?;
+            let is_dir = entry.file_type().ok()?.is_dir();
+            let name = entry.file_name().into_string().ok()?;
+            out.push((name, is_dir))
+        }
+        Some(out)
+    };
+    let err = || oops!(stage, "failed to list directory `{}`", path);
+    inner(&path).unwrap_or_else(err)
+}
+
 fn opt_default(path: &[&str]) -> Value {
     let mut config = &include_str!("defaults.toml").parse::<Value>().unwrap();
     for key in path {
@@ -200,18 +219,18 @@ pub fn opt(mut config: &Value, path: &[&str]) -> Value {
     config.clone()
 }
 
-pub fn opt_str(config: &Value, path: &[&str]) -> String {
-    if let Value::String(string) = opt(config, path) {
-        string
+pub fn opt_bool(config: &Value, path: &[&str]) -> bool {
+    if let Value::Boolean(boolean) = opt(config, path) {
+        boolean
     } else {
-        println!("wrong type: {} must be a string!", path.last().unwrap());
+        println!("wrong type: {} must be a boolean!", path.last().unwrap());
         crate::die();
     }
 }
 
-pub fn opt_bool(config: &Value, path: &[&str]) -> bool {
-    if let Value::Boolean(b) = opt(config, path) {
-        b
+pub fn opt_str(config: &Value, path: &[&str]) -> String {
+    if let Value::String(string) = opt(config, path) {
+        string
     } else {
         println!("wrong type: {} must be a string!", path.last().unwrap());
         crate::die();

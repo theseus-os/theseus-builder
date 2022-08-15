@@ -1,10 +1,10 @@
 use std::fs::read_to_string;
-use std::fs::read_dir;
 
 use crate::log;
 use crate::oops;
 use crate::opt_str;
 use crate::opt_str_vec;
+use crate::list_dir;
 
 use toml::Value;
 
@@ -22,12 +22,8 @@ pub fn process(config: &Value) {
         log!(stage, "discovering {}", subdir);
 
         let dir = format!("{}/{}", &root, subdir);
-        let iter = read_dir(&dir).unwrap_or_else(|_| oops!(stage, "failed to open `{}`", dir));
-        for entry in iter {
-            let entry = entry.unwrap();
-            if entry.file_type().unwrap().is_dir() {
-                let name = entry.file_name().into_string().unwrap();
-
+        for (name, is_dir) in list_dir(stage, &dir) {
+            if is_dir {
                 let manifest = format!("{}/{}/Cargo.toml", &dir, &name);
                 let manifest = match read_to_string(&manifest) {
                     Ok(manifest) => manifest,

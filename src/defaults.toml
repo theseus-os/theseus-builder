@@ -25,3 +25,7 @@ linker = "ld"
 
 [serialize-nano-core-syms]
 readelf = "readelf"
+
+[relink-rlibs]
+linker = "ld"
+remove-rlibs-dirs = true

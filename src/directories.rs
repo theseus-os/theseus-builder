@@ -19,4 +19,5 @@ pub fn process(config: &Value) {
     try_create_dir(&format!("{}/isofiles/modules", &build_dir));
     try_create_dir(&format!("{}/deps", &build_dir));
     try_create_dir(&format!("{}/target", &build_dir));
+    try_create_dir(&format!("{}/extracted_rlibs", &build_dir));
 }
