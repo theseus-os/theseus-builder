@@ -18,4 +18,5 @@ pub fn process(config: &Value) {
     try_create_dir(&format!("{}/deps", &build_dir), false);
     try_create_dir(&format!("{}/target", &build_dir), false);
     try_create_dir(&format!("{}/extracted_rlibs", &build_dir), false);
+    try_create_dir(&format!("{}/debug_symbols", &build_dir), false);
 }

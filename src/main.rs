@@ -24,6 +24,7 @@ mod serialize_nano_core_syms;
 mod relink_rlibs;
 mod copy_crate_objects;
 mod relink_objects;
+mod strip_objects;
 
 pub fn die() -> ! {
     exit(1)
@@ -64,6 +65,7 @@ fn main() {
             relink_rlibs::process,
             copy_crate_objects::process,
             relink_objects::process,
+            strip_objects::process,
         ];
 
         log!("main", "configuration was parsed successfully");

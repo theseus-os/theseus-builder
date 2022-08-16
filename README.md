@@ -49,7 +49,7 @@ cargo run -r -- build-cells.build-std=[ "core" "alloc" ]
 | ☑ | `relink_rlibs` | [`Makefile::build::part-1`] |
 | ☑ | `copy_crate_objects` | [`Makefile::build::part-2`] |
 | ☑ | `relink_objects` | [`Makefile::build::part-3`] |
-|  | `strip_modules` | [`Makefile::build::part-5`] |
+| ☑ | `strip_objects` | [`Makefile::build::part-5`] |
 |  | `prepare_out_of_tree_builds` | [`Makefile::build::part-4`] |
 |  | `add_bootloader` | [`Makefile::grub` & `Makefile::limine`] |
 |  | `package_iso` | creates a disk image from the `isofiles` directory using `xorriso` |

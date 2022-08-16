@@ -38,3 +38,7 @@ debug-crate-objects = false
 [relink-objects]
 linker = "ld"
 stripper = "strip"
+
+[strip-objects]
+stripper = "strip"
+strip-nano_core = true
