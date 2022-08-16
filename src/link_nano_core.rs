@@ -1,9 +1,7 @@
 use crate::log;
 use crate::opt_str;
-use crate::check_result;
+use crate::run;
 use crate::list_dir;
-
-use std::process::Command;
 
 use toml::Value;
 
@@ -12,13 +10,13 @@ pub fn process(config: &Value) {
 
     let root = opt_str(config, &["theseus-root"]);
     let build_dir = opt_str(config, &["build-dir"]);
+    let arch = opt_str(config, &["arch"]);
 
     let target = opt_str(config, &["build-cells", "cargo-target-name"]);
     let build_mode = opt_str(config, &["build-cells", "build-mode"]);
     let static_lib = format!("{}/target/{}/{}/libnano_core.a", &build_dir, &target, &build_mode);
 
     let linker = opt_str(config, &["link-nano-core", "linker"]);
-    let arch = opt_str(config, &["arch"]);
 
     log!(stage, "compiling assembly trampolines");
 
@@ -34,17 +32,15 @@ pub fn process(config: &Value) {
             let output = format!("{}/nano_core/asm_{}_{}.o", &build_dir, entry, arch);
 
             // todo: add cflags
-            let result = Command::new("nasm")
-                .arg("-f")
-                .arg("elf64")
-                .arg("-i")
-                .arg(&asm_sources_dir)
-                .arg(&input)
-                .arg("-o")
-                .arg(&output)
-                .status();
-
-            check_result(stage, result, "nasm invocation failed");
+            run(stage, "nasm", &[&[
+                "-f",
+                "elf64",
+                "-i",
+                &asm_sources_dir,
+                &input,
+                "-o",
+                &output,
+            ]]);
 
             asm_object_files.push(output);
         }
@@ -55,15 +51,15 @@ pub fn process(config: &Value) {
     let linker_script = format!("{}/linker_higher_half.ld", asm_sources_dir);
     let output = format!("{}/nano_core/nano_core-{}.bin", &build_dir, arch);
 
-    let result = Command::new(linker)
-        .arg("-n")
-        .arg("-T")
-        .arg(&linker_script)
-        .arg("-o")
-        .arg(&output)
-        .args(&asm_object_files)
-        .arg(&static_lib)
-        .status();
-
-    check_result(stage, result, "linker invocation failed");
+    run(stage, &linker, &[
+        &[
+            "-n",
+            "-T",
+            &linker_script,
+            "-o",
+            &output,
+        ],
+        &asm_object_files.iter().map(|f| f.as_str()).collect::<Vec<_>>(),
+        &[ &static_lib ],
+    ]);
 }

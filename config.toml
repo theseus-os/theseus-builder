@@ -7,3 +7,6 @@ toolchain = "theseus"
 
 [copy-crate-objects]
 extra-target-dirs = [ "../rust/build/x86_64-unknown-linux-gnu/stage2-std" ]
+
+[add-bootloader]
+bootloader = "limine"

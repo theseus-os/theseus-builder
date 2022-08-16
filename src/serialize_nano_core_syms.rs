@@ -35,10 +35,10 @@ pub fn process(config: &Value) {
 
     let readelf_output = match result {
         Ok(output) => {
-            check_result(stage, Ok(output.status), "readelf invocation failed");
+            check_result(stage, Ok(output.status), "readelf");
             String::from_utf8(output.stdout).unwrap()
         },
-        _ => oops!(stage, "readelf invocation failed"),
+        _ => oops!(stage, "readelf"),
     };
 
     log!(stage, "filtering symbols");

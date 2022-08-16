@@ -5,6 +5,7 @@ use std::fs::read_dir;
 use std::fmt::Display;
 use std::process::exit;
 use std::process::ExitStatus;
+use std::process::Command;
 use std::path::Path;
 use std::io::Error;
 use std::io::ErrorKind;
@@ -25,6 +26,7 @@ mod relink_rlibs;
 mod copy_crate_objects;
 mod relink_objects;
 mod strip_objects;
+mod add_bootloader;
 
 pub fn die() -> ! {
     exit(1)
@@ -66,6 +68,7 @@ fn main() {
             copy_crate_objects::process,
             relink_objects::process,
             strip_objects::process,
+            add_bootloader::process,
         ];
 
         log!("main", "configuration was parsed successfully");
@@ -166,15 +169,30 @@ macro_rules! oops {
     }}
 }
 
-fn check_result(stage: &str, result: Result<ExitStatus, Error>, errmsg: &str) {
+fn check_result(stage: &str, result: Result<ExitStatus, Error>, binary: &str) {
     let no_problem = match result {
         Ok(result) => result.success(),
         _ => false,
     };
 
     if !no_problem {
-        oops!(stage, "{}", errmsg);
+        oops!(stage, "{} invocation failed", binary);
     }
+}
+
+fn run_env(stage: &str, binary: &str, env: &[(&str, &str)], args: &[&[&str]]) {
+    let mut command = Command::new(binary);
+    for (key, value) in env {
+        command.env(key, value);
+    }
+    for args in args {
+        command.args(*args);
+    }
+    check_result(stage, command.status(), binary);
+}
+
+fn run(stage: &str, binary: &str, args: &[&[&str]]) {
+    run_env(stage, binary, &[], args)
 }
 
 fn try_create_dir<P: AsRef<Path> + Display>(path: P, all: bool) {

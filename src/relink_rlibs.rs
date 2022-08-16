@@ -1,11 +1,9 @@
 use crate::log;
 use crate::opt_str;
 use crate::opt_bool;
-use crate::check_result;
+use crate::run;
 use crate::list_dir;
 use crate::try_create_dir;
-
-use std::process::Command;
 
 use toml::Value;
 
@@ -67,13 +65,10 @@ pub fn process(config: &Value) {
 
                 let output = format!("{}/{}.o", &deps_dir, &name);
 
-                let result = Command::new(&linker)
-                        .arg("-r")
-                        .args(&["--output", &output])
-                        .args(&object_files)
-                        .status();
-
-                check_result(stage, result, "linker invocation failed");
+                run(stage, &linker, &[
+                    &[ "-r", "--output", &output ],
+                    &object_files.iter().map(|f| f.as_str()).collect::<Vec<_>>(),
+                ]);
 
                 if clean {
                     remove_dir_all(&tmp_dir).unwrap();

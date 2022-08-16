@@ -42,3 +42,12 @@ stripper = "strip"
 [strip-objects]
 stripper = "strip"
 strip-nano_core = true
+
+[add-bootloader]
+bootloader = "grub"
+grub-mkrescue = "grub-mkrescue"
+limine-config = "built-in"
+limine-tarball = "https://github.com/limine-bootloader/limine/archive/3f6a3303434d07e4663544d35fc0beb1b7c26364.tar.gz"
+limine-subdir = "limine-3f6a3303434d07e4663544d35fc0beb1b7c26364"
+downloader = "wget"
+xorriso = "xorriso"

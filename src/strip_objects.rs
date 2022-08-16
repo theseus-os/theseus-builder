@@ -1,10 +1,9 @@
 use crate::log;
 use crate::opt_str;
 use crate::opt_bool;
-use crate::check_result;
+use crate::run;
 use crate::list_dir;
 
-use std::process::Command;
 use std::sync::Arc;
 use std::fs::copy;
 
@@ -50,19 +49,8 @@ pub fn process(config: &Value) {
         let stripper = stripper.clone();
 
         handles.push(move || {
-            let result = Command::new(stripper.as_ref())
-                    .arg("--only-keep-debug")
-                    .arg(&dbg_path)
-                    .status();
-
-            check_result(stage, result, "stripper invocation #1 failed");
-
-            let result = Command::new(stripper.as_ref())
-                    .arg("--strip-debug")
-                    .arg(&path)
-                    .status();
-
-            check_result(stage, result, "stripper invocation #2 failed");
+            run(stage, stripper.as_ref(), &[&["--only-keep-debug", &dbg_path]]);
+            run(stage, stripper.as_ref(), &[&["--strip-debug", &path]]);
         });
     }
 

@@ -2,16 +2,12 @@ use crate::log;
 use crate::oops;
 use crate::opt_str;
 use crate::opt_str_vec;
-use crate::check_result;
-
-use std::process::Command;
+use crate::run_env;
 
 use toml::Value;
 
 pub fn process(config: &Value) {
     let stage = "build-cells";
-
-    let rust_features: [&str; 0] = [];
 
     let root = opt_str(config, &["theseus-root"]);
     let build_dir = opt_str(config, &["build-dir"]);
@@ -70,25 +66,27 @@ pub fn process(config: &Value) {
         "-Z share-generics=no".into(),
     ]);
 
+    let rust_flags = rust_flags.join(" ");
+
     if !["debug", "release"].contains(&build_mode.as_str()) {
         oops!(stage, "build-mode must be \"debug\" or \"release\"");
     }
 
     log!(stage, "building all crates using cargo");
 
-    let result = Command::new(cargo)
-            .env("RUSTFLAGS", rust_flags.join(" "))
-            .arg(&format!("+{}", &toolchain))
-            .arg("build")
-            .arg(&format!("--manifest-path={}/kernel/nano_core/Cargo.toml", &root))
-            .arg(&format!("--{}", &build_mode))
-            .args(cargo_flags)
-            .args(rust_features)
-            .arg("--target-dir")
-            .arg(&format!("{}/target", &build_dir))
-            .arg("--target")
-            .arg(&format!("{}/{}", &root, &target))
-            .status();
-
-    check_result(stage, result, "cargo invocation failed");
+    run_env(stage, &cargo, &[("RUSTFLAGS", &rust_flags)], &[
+        &[
+            &format!("+{}", &toolchain),
+            "build",
+            &format!("--manifest-path={}/kernel/nano_core/Cargo.toml", &root),
+            &format!("--{}", &build_mode),
+        ],
+        &cargo_flags.iter().map(|f| f.as_str()).collect::<Vec<_>>(),
+        &[
+            "--target-dir",
+            &format!("{}/target", &build_dir),
+            "--target",
+            &format!("{}/{}", &root, &target),
+        ]
+    ]);
 }

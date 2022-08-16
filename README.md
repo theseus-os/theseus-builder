@@ -50,9 +50,8 @@ cargo run -r -- build-cells.build-std=[ "core" "alloc" ]
 | ☑ | `copy_crate_objects` | [`Makefile::build::part-2`] |
 | ☑ | `relink_objects` | [`Makefile::build::part-3`] |
 | ☑ | `strip_objects` | [`Makefile::build::part-5`] |
-|  | `prepare_out_of_tree_builds` | [`Makefile::build::part-4`] |
-|  | `add_bootloader` | [`Makefile::grub` & `Makefile::limine`] |
-|  | `package_iso` | creates a disk image from the `isofiles` directory using `xorriso` |
+| ? | `save_build_params` | [`Makefile::build::part-4`] |
+| ☑ | `add_bootloader` | [`Makefile::grub` & `Makefile::limine`] |
 |  | `run_qemu` | starts qemu with the built disk image |
 |  | `write_bootable_usb` | writes the disk image to a usb drive using `dd` |
 |  | `boot_pxe` | copies the disk image to the tftpboot folder for network booting over PXE |
