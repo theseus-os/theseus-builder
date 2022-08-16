@@ -34,3 +34,7 @@ remove-rlibs-dirs = true
 extra-target-dirs = [ ]
 extra-apps = [ "libtheseus" ]
 debug-crate-objects = false
+
+[relink-objects]
+linker = "ld"
+stripper = "strip"

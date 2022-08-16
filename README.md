@@ -48,7 +48,7 @@ cargo run -r -- build-cells.build-std=[ "core" "alloc" ]
 | ☑ | `serialize_nano_core_syms` | writes serialized symbols to a `.serde` file |
 | ☑ | `relink_rlibs` | [`Makefile::build::part-1`] |
 | ☑ | `copy_crate_objects` | [`Makefile::build::part-2`] |
-|  | `relink_modules` | [`Makefile::build::part-3`] |
+| ☑ | `relink_objects` | [`Makefile::build::part-3`] |
 |  | `strip_modules` | [`Makefile::build::part-5`] |
 |  | `prepare_out_of_tree_builds` | [`Makefile::build::part-4`] |
 |  | `add_bootloader` | [`Makefile::grub` & `Makefile::limine`] |

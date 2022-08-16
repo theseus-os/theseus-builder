@@ -1,8 +1,6 @@
 use crate::log;
-// use crate::oops;
 use crate::opt_str;
 use crate::opt_bool;
-// use crate::opt_str_vec;
 use crate::check_result;
 use crate::list_dir;
 use crate::try_create_dir;
@@ -85,5 +83,5 @@ pub fn process(config: &Value) {
     }
 
     print!("{:70}\r", "");
-    log!(stage, "done processing rlibs");
+    log!(stage, "done relinking rlibs");
 }
