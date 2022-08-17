@@ -2,8 +2,23 @@
 
 This is not officially in use at the moment.
 
-A TOML configuration file is used. String values in this config file
-can reference other string values:
+### Configuration
+
+A TOML configuration file is used. Use option `-c` or `--config` to select a file:
+
+```sh
+# default: use ./config.toml
+cargo run -r --
+
+# use another one:
+cargo run -r -- -c /build/config.toml
+cargo run -r -- --config /build/config.toml
+```
+
+The builder will execute all operations from the directory where this file is.
+Therefore, all paths contained by this config file are relative to its own path.
+
+String values in this config file can reference other string values:
 
 ```toml
 theseus-root = "../theseus"
@@ -13,7 +28,7 @@ theseus-root = "../theseus"
 target = "{theseus-root}/../rust/{target-name}.json"
 ```
 
-The default configuration can be found in `src/default.toml`.
+The default values can be found in `src/default.toml`.
 
 ### Steps to get it working
 
@@ -94,6 +109,8 @@ cargo run -r -- build-cells.build-std=[ "core" "alloc" ]
 |  | Stage | What it does |
 |---|---|---|
 | ☑ | `discover` | lists theseus crates in specified directories along with their descriptions |
+| ☑ | `directories` | creates all build directories |
+| ☑ | `gen-mk-config` | exports all configuration options to a Makefile |
 | ☑ | `build-cells` | invokes  `cargo build`  on kernel crates with all required flags |
 | ☑ | `link-nanocore` | creates build directories |
 | ☑ | `link-nanocore` | compiles assembly trampolines |

@@ -31,8 +31,11 @@ debug-symbols = "{build-dir}/debug_symbols"
 sysroot = "{directories.deps}/sysroot/lib/rustlib/{target-name}/lib"
 target-deps = "{directories.target}/{target-name}/{build-mode}/deps"
 
+[gen-mk-config]
+output = "{directories.cfg}/generated.mk"
+
 [build-cells]
-manifest-path = "{theseus-root}/kernel/nano_core/Cargo.toml"
+manifest-path = "{directories.kernel}/nano_core/Cargo.toml"
 cargo = "cargo"
 cargo-flags = []
 rust-flags = []

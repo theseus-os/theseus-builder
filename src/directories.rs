@@ -2,7 +2,6 @@ use crate::log;
 use crate::Config;
 use crate::try_create_dir;
 
-
 pub fn process(config: &Config) {
     let stage = "directories";
 

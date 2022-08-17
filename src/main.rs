@@ -19,6 +19,7 @@ use pico_args::Arguments;
 
 mod discover;
 mod directories;
+mod gen_mk_config;
 mod build_cells;
 mod link_nanocore;
 mod serialize_nanocore_syms;
@@ -28,9 +29,12 @@ mod relink_objects;
 mod strip_objects;
 mod add_bootloader;
 
+pub const DEFAULT_CONFIG: &'static str = include_str!("defaults.toml");
+
 const STAGES: &'static [fn(config: &Config)] = &[
     discover::process,
     directories::process,
+    gen_mk_config::process,
     build_cells::process,
     link_nanocore::process,
     serialize_nanocore_syms::process,
@@ -44,17 +48,20 @@ const STAGES: &'static [fn(config: &Config)] = &[
 fn parse_stage(name: &str, last: bool) -> usize {
     match name {
         "" if !last               => 0,
+
         "discover"                => 0,
         "directories"             => 1,
-        "build-cells"             => 2,
-        "link-nanocore"           => 3,
-        "serialize-nanocore-syms" => 4,
-        "relink-rlibs"            => 5,
-        "copy-crate-objects"      => 6,
-        "relink-objects"          => 7,
-        "strip-objects"           => 8,
-        "add-bootloader"          => 9,
-        "" if last                => 9,
+        "gen-mk-config"           => 2,
+        "build-cells"             => 3,
+        "link-nanocore"           => 4,
+        "serialize-nanocore-syms" => 5,
+        "relink-rlibs"            => 6,
+        "copy-crate-objects"      => 7,
+        "relink-objects"          => 8,
+        "strip-objects"           => 9,
+        "add-bootloader"          => 10,
+
+        "" if last                => 10,
         _ => oops!("main", "unknown stage \"{}\"", name),
     }
 }
@@ -69,8 +76,7 @@ fn main() {
     let mut args = Arguments::from_env();
 
     if args.contains(["-h", "--help"]) {
-        // println!("{}", include_str!("help.txt"));
-        println!("sorry, no help atm");
+        println!("Sorry, no help here. See the readme!");
     } else {
         if args.contains(["-q", "--quiet"]) {
             unsafe {
@@ -321,7 +327,7 @@ fn resolve_imports(config: &Value, string: &mut String) {
 }
 
 fn opt_default(key: &str) -> Value {
-    let mut config = &include_str!("defaults.toml").parse::<Value>().unwrap();
+    let mut config = &DEFAULT_CONFIG.parse::<Value>().unwrap();
     for part in key.split(".") {
         if let Some(value) = config.get(part) {
             config = value;
