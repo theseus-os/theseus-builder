@@ -11,6 +11,7 @@ use std::io::Error;
 use std::io::ErrorKind;
 use std::ffi::OsString;
 use std::mem::swap;
+use std::env::set_current_dir;
 
 use toml::map::Map;
 use toml::Value;
@@ -89,7 +90,13 @@ fn main() {
             _ => "config.toml".to_string(),
         };
 
-        log!("reading config", "config file: {}", config_path);
+        log!("main", "config file: {}", config_path);
+
+        let path = Path::new(&config_path);
+        let path = path.canonicalize().unwrap();
+        let directory = path.parent().unwrap();
+        log!("main", "moving to config's directory {:?}", directory);
+        set_current_dir(directory).unwrap();
 
         let cfg_string = match read_to_string(&config_path) {
             Ok(cfg_string) => cfg_string,
