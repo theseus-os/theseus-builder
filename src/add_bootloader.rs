@@ -23,6 +23,7 @@ pub fn process(config: &Config) {
     let stage = "add-bootloader";
 
     let iso = config.str("output-iso");
+    let nanocore_path = config.str("nanocore-path");
     let modules_dir = config.str("directories.modules");
     let isofiles_dir = config.str("directories.isofiles");
 
@@ -35,8 +36,11 @@ pub fn process(config: &Config) {
     let prebuilt_subdir = config.str("add-bootloader.expected-subdir");
     let downloader = config.str("add-bootloader.downloader");
     let xorriso = config.str("add-bootloader.xorriso");
+    let nanocore_dst = config.str("add-bootloader.nanocore-destination");
 
     log!(stage, "adding the {} bootloader", bootloader);
+
+    copy(nanocore_path, nanocore_dst).unwrap();
 
     let modules = list_dir(stage, &modules_dir);
 

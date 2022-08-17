@@ -9,6 +9,7 @@ pub fn process(config: &Config) {
     let build_dir = config.str("build-dir");
     let nanocore_dir = config.str("directories.nanocore");
     let isofiles_dir = config.str("directories.isofiles");
+    let boot_dir = config.str("directories.boot");
     let modules_dir = config.str("directories.modules");
     let deps_dir = config.str("directories.deps");
     let target_dir = config.str("directories.target");
@@ -20,6 +21,7 @@ pub fn process(config: &Config) {
     try_create_dir(&build_dir, false);
     try_create_dir(&nanocore_dir, false);
     try_create_dir(&isofiles_dir, false);
+    try_create_dir(&boot_dir, false);
     try_create_dir(&modules_dir, false);
     try_create_dir(&deps_dir, false);
     try_create_dir(&target_dir, false);

@@ -7,14 +7,13 @@ use crate::run_env;
 pub fn process(config: &Config) {
     let stage = "build-cells";
 
-    let target_dir = config.str("directories.target");
-
-    let cargo = config.str("cargo");
     let target = config.str("target");
     let build_mode = config.str("build-mode");
+    let target_dir = config.str("directories.target");
+
+    let cargo = config.str("build-cells.cargo");
     let toolchain = config.str("build-cells.toolchain");
     let manifest_path = config.str("build-cells.manifest-path");
-
     let cargo_flags = config.vec("build-cells.cargo-flags");
     let rust_flags = config.vec("build-cells.rust-flags").join(" ");
 

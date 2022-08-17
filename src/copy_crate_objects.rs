@@ -1,6 +1,7 @@
 use crate::log;
 use crate::oops;
 use crate::Config;
+use crate::list_dir;
 use crate::try_create_dir;
 
 use std::io::Error;
@@ -10,6 +11,7 @@ use std::io::BufReader;
 use std::io::BufRead;
 use std::fs::canonicalize;
 use std::fs::read_dir;
+use std::fs::remove_file;
 use std::fs::DirEntry;
 use std::fs::copy;
 use std::fs::File;
@@ -39,6 +41,14 @@ pub fn process(config: &Config) {
     let target_deps_dirs = config.vec("copy-crate-objects.target-dirs");
     let extra_apps = config.vec("copy-crate-objects.extra-apps");
     let debug_crates_objects = config.bool("copy-crate-objects.debug-crate-objects");
+
+    log!(stage, "removing previous objects");
+
+    for (name, _is_dir) in list_dir(stage, &modules_dir) {
+        if name.ends_with(".o") {
+            remove_file(format!("{}/{}", &modules_dir, name)).unwrap();
+        }
+    }
 
     log!(stage, "discovering crates");
 

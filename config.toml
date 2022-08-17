@@ -1,9 +1,10 @@
 theseus-root = "../theseus"
-target = "{theseus-root}/../rust/{target-name}.json"
+target = "../rust/{target-name}.json"
 
 [build-cells]
 toolchain = "theseus"
-cargo-flags = [ "-Z", "unstable-options" ]
+manifest-path = "{theseus-root}/Cargo.toml"
+cargo-flags = [ "--workspace", "--features", "extract_boot_modules" ]
 rust-flags = [
     # Tell rustc to output the native object file for each crate,
     # which avoids always having to unpack the crate's .rlib archive to extract the object files within.
@@ -39,7 +40,7 @@ rust-flags = [
 ]
 
 [copy-crate-objects]
-extra-target-dirs = [ "{theseus-root}/../rust/build/x86_64-unknown-linux-gnu/stage2-std" ]
+extra-target-dirs = [ "../rust/build/x86_64-unknown-linux-gnu/stage2-std" ]
 
 [add-bootloader]
 bootloader = "limine"

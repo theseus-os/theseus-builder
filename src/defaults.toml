@@ -1,4 +1,3 @@
-cargo = "cargo"
 arch = "x86_64"
 theseus-root = "."
 build-dir = "./build"
@@ -6,7 +5,7 @@ discover = []
 output-iso = "{build-dir}/theseus-{arch}.iso"
 linker = "ld"
 stripper = "strip"
-target-name = "x86_64-theseus"
+target-name = "{arch}-theseus"
 target = "{directories.cfg}/{target-name}.json"
 build-mode = "release"
 nanocore-bin = "nano_core-{arch}.bin"
@@ -23,6 +22,7 @@ apps = "{theseus-root}/applications"
 cfg = "{theseus-root}/cfg"
 nanocore = "{build-dir}/nano_core"
 isofiles = "{build-dir}/isofiles"
+boot = "{directories.isofiles}/boot"
 modules = "{directories.isofiles}/modules"
 deps = "{build-dir}/deps"
 target = "{build-dir}/target"
@@ -33,6 +33,7 @@ target-deps = "{directories.target}/{target-name}/{build-mode}/deps"
 
 [build-cells]
 manifest-path = "{theseus-root}/kernel/nano_core/Cargo.toml"
+cargo = "cargo"
 cargo-flags = []
 rust-flags = []
 
@@ -65,11 +66,13 @@ stripper = "{stripper}"
 strip-nanocore = true
 
 [add-bootloader]
+nanocore-destination = "{directories.boot}/kernel.bin"
 bootloader = "grub"
 grub-mkrescue = "grub-mkrescue"
 limine-config = "built-in"
-limine-tarball = "https://github.com/limine-bootloader/limine/archive/3f6a3303434d07e4663544d35fc0beb1b7c26364.tar.gz"
-limine-subdir = "limine-3f6a3303434d07e4663544d35fc0beb1b7c26364"
+limine-commit = "3f6a3303434d07e4663544d35fc0beb1b7c26364"
+limine-tarball = "https://github.com/limine-bootloader/limine/archive/{add-bootloader.limine-commit}.tar.gz"
+limine-subdir = "limine-{add-bootloader.limine-commit}"
 tarball-path = "{add-bootloader.extract-dir}.tar.gz"
 extract-dir = "{build-dir}/limine-prebuilt"
 expected-subdir = "{add-bootloader.extract-dir}/{add-bootloader.limine-subdir}"
