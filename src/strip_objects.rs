@@ -17,11 +17,11 @@ pub fn process(config: &Value) {
     let build_dir = opt_str(config, &["build-dir"]);
     let arch = opt_str(config, &["arch"]);
 
-    let strip_nano_core = opt_bool(config, &["strip-objects", "strip-nano_core"]);
+    let strip_nanocore = opt_bool(config, &["strip-objects", "strip-nanocore"]);
     let stripper = Arc::new(opt_str(config, &["strip-objects", "stripper"]));
 
-    let nano_core_bin = format!("nano_core-{}.bin", &arch);
-    let nano_core_path = format!("{}/nano_core/{}", &build_dir, &nano_core_bin);
+    let nanocore_bin = format!("nano_core-{}.bin", &arch);
+    let nanocore_path = format!("{}/nano_core/{}", &build_dir, &nanocore_bin);
 
     log!(stage, "stripping objects");
 
@@ -36,8 +36,8 @@ pub fn process(config: &Value) {
         .map(|(n, _)| (format!("{}/{}", &modules_dir, &n), n))
         .collect::<Vec<(String, String)>>();
 
-    if strip_nano_core {
-        files.push((nano_core_path, nano_core_bin));
+    if strip_nanocore {
+        files.push((nanocore_path, nanocore_bin));
     }
 
     for (path, name) in files {

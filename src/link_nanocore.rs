@@ -6,7 +6,7 @@ use crate::list_dir;
 use toml::Value;
 
 pub fn process(config: &Value) {
-    let stage = "link-nano_core";
+    let stage = "link-nanocore";
 
     let root = opt_str(config, &["theseus-root"]);
     let build_dir = opt_str(config, &["build-dir"]);
@@ -46,7 +46,7 @@ pub fn process(config: &Value) {
         }
     }
 
-    log!(stage, "linking nano_core");
+    log!(stage, "linking nanocore");
 
     let linker_script = format!("{}/linker_higher_half.ld", asm_sources_dir);
     let output = format!("{}/nano_core/nano_core-{}.bin", &build_dir, arch);

@@ -23,7 +23,7 @@ build-std-features = ["compiler-builtins-mem"]
 [link-nano-core]
 linker = "ld"
 
-[serialize-nano-core-syms]
+[serialize-nanocore-syms]
 readelf = "readelf"
 
 [relink-rlibs]
@@ -41,7 +41,7 @@ stripper = "strip"
 
 [strip-objects]
 stripper = "strip"
-strip-nano_core = true
+strip-nanocore = true
 
 [add-bootloader]
 bootloader = "grub"

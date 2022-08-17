@@ -12,25 +12,25 @@ use bincode::config::standard;
 use rustc_demangle::demangle;
 
 pub fn process(config: &Value) {
-    let stage = "serialize-nano_core-syms";
+    let stage = "serialize-nanocore-syms";
 
     let build_dir = opt_str(config, &["build-dir"]);
 
     let kernel_prefix = opt_str(config, &["prefixes", "kernel"]);
-    let readelf = opt_str(config, &["serialize-nano-core-syms", "readelf"]);
+    let readelf = opt_str(config, &["serialize-nanocore-syms", "readelf"]);
     let arch = opt_str(config, &["arch"]);
 
     let output_path = format!("{}/isofiles/modules/{}nano_core.serde", &build_dir, &kernel_prefix);
 
     log!(stage, "extracting symbol information");
 
-    let nano_core_bin = format!("{}/nano_core/nano_core-{}.bin", &build_dir, arch);
+    let nanocore_bin = format!("{}/nano_core/nano_core-{}.bin", &build_dir, arch);
 
     let result = Command::new(readelf)
         .arg("-W")
         .arg("-S")
         .arg("-s")
-        .arg(&nano_core_bin)
+        .arg(&nanocore_bin)
         .output();
 
     let readelf_output = match result {
@@ -83,7 +83,7 @@ pub fn process(config: &Value) {
 
     log!(stage, "serializing symbols");
 
-    let crate_items = parse_nano_core_symbol_file(filtered).unwrap();
+    let crate_items = parse_nanocore_symbol_file(filtered).unwrap();
 
     let serialized_crate = SerializedCrate {
         crate_name: "nano_core".to_string(),
@@ -109,13 +109,13 @@ use mod_mgmt::serde::SerializedSection;
 use mod_mgmt::serde::SerializedCrate;
 use std::collections::{BTreeMap, BTreeSet};
 
-/// Parses the nano_core symbol file that represents the sections and symbols
-/// in the initially running code (the kernel base image, i.e., "nano_core"),
+/// Parses the nanocore symbol file that represents the sections and symbols
+/// in the initially running code (the kernel base image, i.e., "nanocore"),
 /// which are loaded into the running system by the bootloader.
 ///
 /// Basically, this parses the section list for offsets, size, and flag data,
 /// and parses the symbol table to populate the list of sections.
-fn parse_nano_core_symbol_file(symbol_str: String) -> Result<ParsedCrateItems, &'static str> {
+fn parse_nanocore_symbol_file(symbol_str: String) -> Result<ParsedCrateItems, &'static str> {
     // We don't care about the .init sections shndx.
     let mut init_vaddr: Option<usize> = None;
     let mut text: Option<(Shndx, usize)> = None;
@@ -161,7 +161,7 @@ fn parse_nano_core_symbol_file(symbol_str: String) -> Result<ParsedCrateItems, &
 
     // We will fill in these crate items while parsing the symbol file.
     let mut crate_items = ParsedCrateItems::default();
-    // As the nano_core doesn't have one section per function/data/rodata, we fake it here with an arbitrary section counter
+    // As the nanocore doesn't have one section per function/data/rodata, we fake it here with an arbitrary section counter
     let mut section_counter = 0;
 
     // First, find the section indices that we care about: .text, .data, .rodata, .bss,
@@ -234,13 +234,13 @@ fn parse_nano_core_symbol_file(symbol_str: String) -> Result<ParsedCrateItems, &
     }
 
     let text =
-        text.ok_or("parse_nano_core_symbol_file(): couldn't find .text section index")?;
+        text.ok_or("parse_nanocore_symbol_file(): couldn't find .text section index")?;
     let rodata =
-        rodata.ok_or("parse_nano_core_symbol_file(): couldn't find .rodata section index")?;
+        rodata.ok_or("parse_nanocore_symbol_file(): couldn't find .rodata section index")?;
     let data =
-        data.ok_or("parse_nano_core_symbol_file(): couldn't find .data section index")?;
+        data.ok_or("parse_nanocore_symbol_file(): couldn't find .data section index")?;
     let bss =
-        bss.ok_or("parse_nano_core_symbol_file(): couldn't find .bss section index")?;
+        bss.ok_or("parse_nanocore_symbol_file(): couldn't find .bss section index")?;
     let shndxs = MainSections {
         text,
         rodata,
@@ -300,39 +300,39 @@ fn parse_nano_core_symbol_file(symbol_str: String) -> Result<ParsedCrateItems, &
 
             let _num = parts
                 .next()
-                .ok_or("parse_nano_core_symbol_file(): couldn't get column 0 'Num'")?;
+                .ok_or("parse_nanocore_symbol_file(): couldn't get column 0 'Num'")?;
             let sec_vaddr = parts
                 .next()
-                .ok_or("parse_nano_core_symbol_file(): couldn't get column 1 'Value'")?;
+                .ok_or("parse_nanocore_symbol_file(): couldn't get column 1 'Value'")?;
             let sec_size = parts
                 .next()
-                .ok_or("parse_nano_core_symbol_file(): couldn't get column 2 'Size'")?;
+                .ok_or("parse_nanocore_symbol_file(): couldn't get column 2 'Size'")?;
             let _typ = parts
                 .next()
-                .ok_or("parse_nano_core_symbol_file(): couldn't get column 3 'Type'")?;
+                .ok_or("parse_nanocore_symbol_file(): couldn't get column 3 'Type'")?;
             let bind = parts
                 .next()
-                .ok_or("parse_nano_core_symbol_file(): couldn't get column 4 'Bind'")?;
+                .ok_or("parse_nanocore_symbol_file(): couldn't get column 4 'Bind'")?;
             let _vis = parts
                 .next()
-                .ok_or("parse_nano_core_symbol_file(): couldn't get column 5 'Vis'")?;
+                .ok_or("parse_nanocore_symbol_file(): couldn't get column 5 'Vis'")?;
             let sec_ndx = parts
                 .next()
-                .ok_or("parse_nano_core_symbol_file(): couldn't get column 6 'Ndx'")?;
+                .ok_or("parse_nanocore_symbol_file(): couldn't get column 6 'Ndx'")?;
             let name = parts
                 .next()
-                .ok_or("parse_nano_core_symbol_file(): couldn't get column 7 'Name'")?;
+                .ok_or("parse_nanocore_symbol_file(): couldn't get column 7 'Name'")?;
 
             let global = bind == "GLOBAL" || bind == "WEAK";
             let sec_vaddr = usize::from_str_radix(sec_vaddr, 16).map_err(|e| {
-                eprintln!("parse_nano_core_symbol_file(): error parsing virtual address Value at line {}: {:?}\n    line: {}", _line_num + 1, e, line);
-                "parse_nano_core_symbol_file(): couldn't parse virtual address (value column)"
+                eprintln!("parse_nanocore_symbol_file(): error parsing virtual address Value at line {}: {:?}\n    line: {}", _line_num + 1, e, line);
+                "parse_nanocore_symbol_file(): couldn't parse virtual address (value column)"
             })?;
             let sec_size = sec_size.parse::<usize>().or_else(|e| {
                 sec_size.get(2 ..).ok_or(e).and_then(|sec_size_hex| usize::from_str_radix(sec_size_hex, 16))
             }).map_err(|e| {
-                eprintln!("parse_nano_core_symbol_file(): error parsing size at line {}: {:?}\n    line: {}", _line_num + 1, e, line);
-                "parse_nano_core_symbol_file(): couldn't parse size column"
+                eprintln!("parse_nanocore_symbol_file(): error parsing size at line {}: {:?}\n    line: {}", _line_num + 1, e, line);
+                "parse_nanocore_symbol_file(): couldn't parse size column"
             })?;
 
             // while vaddr and size are required, ndx could be valid or not.
@@ -342,7 +342,7 @@ fn parse_nano_core_symbol_file(symbol_str: String) -> Result<ParsedCrateItems, &
                 // Otherwise, if ndx is not a number (e.g., "ABS"), then we just skip that entry (go onto the next line).
                 _ => {
                     // trace!(
-                    //     "parse_nano_core_symbol_file(): skipping line {}: {}",
+                    //     "parse_nanocore_symbol_file(): skipping line {}: {}",
                     //     _line_num + 1,
                     //     line
                     // );
@@ -350,7 +350,7 @@ fn parse_nano_core_symbol_file(symbol_str: String) -> Result<ParsedCrateItems, &
                 }
             };
             
-            // debug!("parse_nano_core_symbol_file(): name: {}, vaddr: {:#X}, size: {:#X}, sec_ndx {}", name, sec_vaddr, sec_size, sec_ndx);
+            // debug!("parse_nanocore_symbol_file(): name: {}, vaddr: {:#X}, size: {:#X}, sec_ndx {}", name, sec_vaddr, sec_size, sec_ndx);
 
             add_new_section(
                 &shndxs,
@@ -367,11 +367,11 @@ fn parse_nano_core_symbol_file(symbol_str: String) -> Result<ParsedCrateItems, &
         } // end of loop over all lines
     }
 
-    // trace!("parse_nano_core_symbol_file(): finished looping over symtab.");
+    // trace!("parse_nanocore_symbol_file(): finished looping over symtab.");
     Ok(crate_items)
 }
 
-/// The collection of sections and symbols obtained while parsing the nano_core crate.
+/// The collection of sections and symbols obtained while parsing the nanocore crate.
 #[derive(Default)]
 struct ParsedCrateItems {
     pub sections: HashMap<Shndx, SerializedSection>,

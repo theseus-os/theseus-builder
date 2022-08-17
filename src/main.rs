@@ -20,17 +20,50 @@ use pico_args::Arguments;
 mod discover;
 mod directories;
 mod build_cells;
-mod link_nano_core;
-mod serialize_nano_core_syms;
+mod link_nanocore;
+mod serialize_nanocore_syms;
 mod relink_rlibs;
 mod copy_crate_objects;
 mod relink_objects;
 mod strip_objects;
 mod add_bootloader;
 
+const STAGES: &'static [fn(config: &Value)] = &[
+    discover::process,
+    directories::process,
+    build_cells::process,
+    link_nanocore::process,
+    serialize_nanocore_syms::process,
+    relink_rlibs::process,
+    copy_crate_objects::process,
+    relink_objects::process,
+    strip_objects::process,
+    add_bootloader::process,
+];
+
+fn parse_stage(name: &str, last: bool) -> usize {
+    match name {
+        "" if !last               => 0,
+        "discover"                => 0,
+        "directories"             => 1,
+        "build-cells"             => 2,
+        "link-nanocore"           => 3,
+        "serialize-nanocore-syms" => 4,
+        "relink-rlibs"            => 5,
+        "copy-crate-objects"      => 6,
+        "relink-objects"          => 7,
+        "strip-objects"           => 8,
+        "add-bootloader"          => 9,
+        "" if last                => 9,
+        _ => oops!("main", "unknown stage \"{}\"", name),
+    }
+}
+
 pub fn die() -> ! {
     exit(1)
 }
+
+static mut QUIET: bool = false;
 
 fn main() {
     let mut args = Arguments::from_env();
@@ -39,6 +72,12 @@ fn main() {
         // println!("{}", include_str!("help.txt"));
         println!("sorry, no help atm");
     } else {
+        if args.contains(["-q", "--quiet"]) {
+            unsafe {
+                QUIET = true;
+            }
+        }
+
         let config_path = match args.value_from_str(["-c", "--config-file"]) {
             Ok(path) => path,
             _ => "config.toml".to_string(),
@@ -56,25 +95,29 @@ fn main() {
             Err(e) => oops!("main", "{}", e),
         };
 
-        apply_overrides(&mut config, args.finish());
-
-        let steps = [
-            discover::process,
-            directories::process,
-            build_cells::process,
-            link_nano_core::process,
-            serialize_nano_core_syms::process,
-            relink_rlibs::process,
-            copy_crate_objects::process,
-            relink_objects::process,
-            strip_objects::process,
-            add_bootloader::process,
-        ];
-
         log!("main", "configuration was parsed successfully");
 
-        for step in steps {
-            step(&config);
+        let groups = match args.value_from_str(["-s", "--stages"]) {
+            Ok(arg) => arg,
+            _ => "..".to_string(),
+        };
+
+        apply_overrides(&mut config, args.finish());
+
+        for group in groups.split(",") {
+            let range = if group.contains("..") {
+                let mut stages = group.split("..");
+                let first = parse_stage(&stages.next().unwrap(), false);
+                let last  = parse_stage(&stages.next().unwrap(), true);
+                first..=last
+            } else {
+                let stage = parse_stage(group, true);
+                stage..=stage
+            };
+
+            for processor in &STAGES[range] {
+                processor(&config);
+            }
         }
     }
 }
@@ -155,8 +198,10 @@ fn apply_overrides(config: &mut Value, override_args: Vec<OsString>) {
 #[macro_export]
 macro_rules! log {
     ($log_stage:expr, $($arg:tt)*) => {{
-        print!("[{}] ", $log_stage);
-        println!($($arg)*);
+        if unsafe { !crate::QUIET } {
+            print!("[{}] ", $log_stage);
+            println!($($arg)*);
+        }
     }}
 }
 

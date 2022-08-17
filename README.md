@@ -10,6 +10,45 @@ b. In `config.toml`, set the correct toolchain & target spec to use.
 
 c. build and run this crate with a nightly/dev toolchain.
 
+### Verbosity
+
+Use the `-s` or `--quiet` option to hide log messages:
+
+```sh
+# default: verbose
+cargo run -r --
+
+# quiet mode:
+cargo run -r -- -q
+cargo run -r -- --quiet
+```
+
+### Selecting stages to execute
+
+The `-s` or `--stages` option selects stages to execute;
+you can pass a comma-separated list of stage ranges:
+
+```sh
+# default: all stages, once
+cargo run -r --
+cargo run -r -- -s ..
+
+# only run "discover", to list crates in kernel/:
+cargo run -r -- -s discover discover=[ "kernel" ]
+
+# run everything 5 times:
+cargo run -r -- -s ..,..,..,..,..
+
+# run "add-bootloader", run everything, and "add-bootloader" again:
+cargo run -r -- -s add-bootloader,..,add-bootloader
+
+# run "copy-crate-objects" and the next ones:
+cargo run -r -- -s copy-crate-objects..
+
+# run from "build-cells" to "relink-rlibs", then from "strip-objects" to "add-bootloader":
+cargo run -r -- -s build-cells..relink-rlibs,strip-objects..add-bootloader
+```
+
 ### Configuration overrides
 
 Suppose you have this command-line to run this builder:
@@ -38,20 +77,21 @@ cargo run -r -- build-cells.build-std=[ "core" "alloc" ]
 
 |  | Stage | What it does |
 |---|---|---|
-| ☑ | `build_cells` | invokes  `cargo build`  on kernel crates with all required flags |
-| ☑ | `link_nano_core` | creates build directories |
-| ☑ | `link_nano_core` | compiles assembly trampolines |
-| ☑ | `link_nano_core` | links the `nano_core` binary |
-| ☑ | `serialize_nano_core_syms` | extracts symbol info from the `nano_core` binary |
-| ☑ | `serialize_nano_core_syms` | filters extracted symbols |
-| ☑ | `serialize_nano_core_syms` | serializes symbols |
-| ☑ | `serialize_nano_core_syms` | writes serialized symbols to a `.serde` file |
-| ☑ | `relink_rlibs` | [`Makefile::build::part-1`] |
-| ☑ | `copy_crate_objects` | [`Makefile::build::part-2`] |
-| ☑ | `relink_objects` | [`Makefile::build::part-3`] |
-| ☑ | `strip_objects` | [`Makefile::build::part-5`] |
-| ? | `save_build_params` | [`Makefile::build::part-4`] |
-| ☑ | `add_bootloader` | [`Makefile::grub` & `Makefile::limine`] |
-|  | `run_qemu` | starts qemu with the built disk image |
-|  | `write_bootable_usb` | writes the disk image to a usb drive using `dd` |
-|  | `boot_pxe` | copies the disk image to the tftpboot folder for network booting over PXE |
+| ☑ | `discover` | lists theseus crates in specified directories along with their descriptions |
+| ☑ | `build-cells` | invokes  `cargo build`  on kernel crates with all required flags |
+| ☑ | `link-nanocore` | creates build directories |
+| ☑ | `link-nanocore` | compiles assembly trampolines |
+| ☑ | `link-nanocore` | links the `nanocore` binary |
+| ☑ | `serialize-nanocore-syms` | extracts symbol info from the `nanocore` binary |
+| ☑ | `serialize-nanocore-syms` | filters extracted symbols |
+| ☑ | `serialize-nanocore-syms` | serializes symbols |
+| ☑ | `serialize-nanocore-syms` | writes serialized symbols to a `.serde` file |
+| ☑ | `relink-rlibs` | [`Makefile::build::part-1`] |
+| ☑ | `copy-crate-objects` | [`Makefile::build::part-2`] |
+| ☑ | `relink-objects` | [`Makefile::build::part-3`] |
+| ☑ | `strip-objects` | [`Makefile::build::part-5`] |
+| ? | `save-build-params` | [`Makefile::build::part-4`] |
+| ☑ | `add-bootloader` | [`Makefile::grub` & `Makefile::limine`] |
+|  | `run-qemu` | starts qemu with the built disk image |
+|  | `write-bootable-usb` | writes the disk image to a usb drive using `dd` |
+|  | `boot-pxe` | copies the disk image to the tftpboot folder for network booting over PXE |
