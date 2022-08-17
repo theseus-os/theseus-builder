@@ -1,6 +1,6 @@
 use crate::log;
 use crate::oops;
-use crate::opt_str;
+use crate::Config;
 use crate::list_dir;
 use crate::run;
 use crate::try_create_dir;
@@ -16,33 +16,32 @@ use lz4_flex::block::compress_prepend_size;
 use cpio::newc::Builder;
 use cpio::write_cpio;
 
-use toml::Value;
 
 const BUILTIN_LIMINE_CFG: &'static str = include_str!("limine.cfg");
 
-pub fn process(config: &Value) {
+pub fn process(config: &Config) {
     let stage = "add-bootloader";
 
-    let build_dir = opt_str(config, &["build-dir"]);
-    let arch = opt_str(config, &["arch"]);
+    let iso = config.str("output-iso");
+    let modules_dir = config.str("directories.modules");
+    let isofiles_dir = config.str("directories.isofiles");
 
-    let bootloader = opt_str(config, &["add-bootloader", "bootloader"]);
-    let grub_mkrescue = opt_str(config, &["add-bootloader", "grub-mkrescue"]);
-    let limine_config = opt_str(config, &["add-bootloader", "limine-config"]);
-    let limine_tarball = opt_str(config, &["add-bootloader", "limine-tarball"]);
-    let limine_subdir = opt_str(config, &["add-bootloader", "limine-subdir"]);
-    let downloader = opt_str(config, &["add-bootloader", "downloader"]);
-    let xorriso = opt_str(config, &["add-bootloader", "xorriso"]);
+    let bootloader = config.str("add-bootloader.bootloader");
+    let grub_mkrescue = config.str("add-bootloader.grub-mkrescue");
+    let limine_config = config.str("add-bootloader.limine-config");
+    let limine_tarball = config.str("add-bootloader.limine-tarball");
+    let tarball_path = config.str("add-bootloader.tarball-path");
+    let prebuilt_dir = config.str("add-bootloader.extract-dir");
+    let prebuilt_subdir = config.str("add-bootloader.expected-subdir");
+    let downloader = config.str("add-bootloader.downloader");
+    let xorriso = config.str("add-bootloader.xorriso");
 
     log!(stage, "adding the {} bootloader", bootloader);
 
-    let isofiles = format!("{}/isofiles", &build_dir);
-    let modules_dir = format!("{}/modules", &isofiles);
     let modules = list_dir(stage, &modules_dir);
-    let iso = format!("{}/theseus-{}.iso", &build_dir, &arch);
 
     if bootloader == "grub" {
-        let grub_dir = format!("{}/boot/grub", &isofiles);
+        let grub_dir = format!("{}/boot/grub", &isofiles_dir);
         let grub_cfg = format!("{}/grub.cfg",  &grub_dir);
 
         try_create_dir(&grub_dir, true);
@@ -52,11 +51,11 @@ pub fn process(config: &Value) {
         write(&grub_cfg, &cfg_string).unwrap();
 
         log!(stage, "using grub-mkrescue to create an ISO file");
-        run(stage, &grub_mkrescue, &[&["-o", &iso, &isofiles]]);
+        run(stage, &grub_mkrescue, &[&["-o", &iso, &isofiles_dir]]);
 
     } else if bootloader == "limine" {
         log!(stage, "compressing boot modules");
-        let modules_cpio_lz4 = format!("{}/modules.cpio.lz4", &isofiles);
+        let modules_cpio_lz4 = format!("{}/modules.cpio.lz4", &isofiles_dir);
         let mut opener = OpenOptions::new();
         let opener = opener.read(true);
 
@@ -77,14 +76,11 @@ pub fn process(config: &Value) {
         // write file
         write(&modules_cpio_lz4, &compressed).unwrap();
 
-        let prebuilt_dir = format!("{}/limine-prebuilt", &build_dir);
-        let prebuilt_subdir = format!("{}/{}", prebuilt_dir, limine_subdir);
         let prebuilt_subdir_exists = metadata(&prebuilt_subdir).is_ok();
-
         if !prebuilt_subdir_exists {
             log!(stage, "fetching limine pre-built binaries");
 
-            let mut tarball_path = format!("{}/limine-prebuilt.tar.gz", &build_dir);
+            let mut tarball_path = tarball_path;
             let tarball_exists = metadata(&tarball_path).is_ok();
 
             if tarball_exists {
@@ -112,7 +108,7 @@ pub fn process(config: &Value) {
 
         for import in [ "limine-cd.bin", "limine-cd-efi.bin", "limine.sys" ] {
             let src = format!("{}/{}", &prebuilt_subdir, import);
-            let dst = format!("{}/{}", &isofiles, import);
+            let dst = format!("{}/{}", &isofiles_dir, import);
 
             copy(&src, &dst).unwrap();
         }
@@ -124,7 +120,7 @@ pub fn process(config: &Value) {
             path => read_to_string(path).unwrap(),
         };
 
-        let limine_cfg = format!("{}/limine.cfg", &isofiles);
+        let limine_cfg = format!("{}/limine.cfg", &isofiles_dir);
         write(&limine_cfg, &config_contents).unwrap();
 
         log!(stage, "politely asking {} to assembling the image", &xorriso);
@@ -142,7 +138,7 @@ pub fn process(config: &Value) {
             "-efi-boot-part",
             "--efi-boot-image",
             "--protective-msdos-label",
-            &isofiles,
+            &isofiles_dir,
             "-o", &iso,
         ]]);
 

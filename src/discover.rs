@@ -2,17 +2,16 @@ use std::fs::read_to_string;
 
 use crate::log;
 use crate::oops;
-use crate::opt_str;
-use crate::opt_str_vec;
+use crate::Config;
 use crate::list_dir;
 
 use toml::Value;
 
-pub fn process(config: &Value) {
+pub fn process(config: &Config) {
     let stage = "discover";
 
-    let root = opt_str(config, &["theseus-root"]);
-    let discover = opt_str_vec(config, &["discover"]);
+    let root = config.str("theseus-root");
+    let discover = config.vec("discover");
 
     for subdir in &discover {
         log!(stage, "discovering {}", subdir);

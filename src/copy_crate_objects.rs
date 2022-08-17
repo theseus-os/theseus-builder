@@ -1,8 +1,6 @@
 use crate::log;
 use crate::oops;
-use crate::opt_str;
-use crate::opt_bool;
-use crate::opt_str_vec;
+use crate::Config;
 use crate::try_create_dir;
 
 use std::io::Error;
@@ -21,42 +19,29 @@ use std::collections::HashSet;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 
-use toml::Value;
 
 use walkdir::WalkDir;
 
 const PRINT_SORTED: bool = true;
 
-pub fn process(config: &Value) {
+pub fn process(config: &Config) {
     let stage = "copy-crate-objects";
 
-    let root = opt_str(config, &["theseus-root"]);
-    let build_dir = opt_str(config, &["build-dir"]);
+    let modules_dir = config.str("directories.modules");
+    let deps_dir = config.str("directories.deps");
+    let sysroot_dir = config.str("directories.sysroot");
+    let kernel_path = config.str("directories.kernel");
+    let apps_path = config.str("directories.apps");
 
-    let kernel_prefix = opt_str(config, &["prefixes", "kernel"]);
-    let apps_prefix = opt_str(config, &["prefixes", "applications"]);
+    let kernel_prefix = config.str("prefixes.kernel");
+    let apps_prefix = config.str("prefixes.applications");
 
-    let target = opt_str(config, &["build-cells", "cargo-target-name"]);
-    let build_mode = opt_str(config, &["build-cells", "build-mode"]);
-
-    let extra_target_dirs = opt_str_vec(config, &["copy-crate-objects", "extra-target-dirs"]);
-    let extra_apps = opt_str_vec(config, &["copy-crate-objects", "extra-apps"]);
-    let debug_crates_objects = opt_bool(config, &["copy-crate-objects", "debug-crate-objects"]);
+    let target_deps_dirs = config.vec("copy-crate-objects.target-dirs");
+    let extra_apps = config.vec("copy-crate-objects.extra-apps");
+    let debug_crates_objects = config.bool("copy-crate-objects.debug-crate-objects");
 
     log!(stage, "discovering crates");
 
-    let objects_dir = format!("{}/isofiles/modules", build_dir);
-    let deps_dir = format!("{}/deps", build_dir);
-    let sysroot_dir = format!("{}/sysroot/lib/rustlib/{}/lib", deps_dir, target);
-
-    let mut input_dirs = extra_target_dirs;
-    input_dirs.push(format!("{}/target", build_dir));
-
-    for target_dir in &mut input_dirs {
-        target_dir.push_str(&format!("/{}/{}/deps", target, build_mode));
-    }
-
-    let kernel_path = format!("{}/kernel", root);
     let kernel_path_buf = match canonicalize(&kernel_path) {
         Ok(path_buf) => path_buf,
         _ => oops!(stage, "couldn't access {}", &kernel_path),
@@ -67,7 +52,6 @@ pub fn process(config: &Value) {
         _    => populate_crates_from_dir(kernel_path_buf),
     }.unwrap_or_else(|e| oops!(stage, "couldn't access {}: {}", &kernel_path, e));
 
-    let apps_path = format!("{}/applications", root);
     let apps_path_buf = match canonicalize(&apps_path) {
         Ok(path_buf) => path_buf,
         _ => oops!(stage, "couldn't access {}", &apps_path),
@@ -87,7 +71,7 @@ pub fn process(config: &Value) {
     ) = parse_input_dir(
         apps_crates_set,
         kernel_crates_set,
-        input_dirs,
+        target_deps_dirs,
         debug_crates_objects,
     ).unwrap();
 
@@ -96,19 +80,19 @@ pub fn process(config: &Value) {
     // Now that we have obtained the lists of kernel, app, and other crates,
     // we copy their crate object files into the output object directory with the proper prefix.
     copy_files(
-        &objects_dir,
+        &modules_dir,
         app_object_files.values().map(|d| d.path()),
         &apps_prefix,
         debug_crates_objects,
     ).unwrap();
     copy_files(
-        &objects_dir,
+        &modules_dir,
         kernel_objects_and_deps_files.values().map(|(obj_direnty, _)| obj_direnty.path()),
         &kernel_prefix,
         debug_crates_objects,
     ).unwrap();
     copy_files(
-        &objects_dir,
+        &modules_dir,
         other_objects_and_deps_files.values().map(|(obj_direnty, _)| obj_direnty.path()),
         &kernel_prefix,
         debug_crates_objects,

@@ -1,30 +1,24 @@
 use crate::log;
 use crate::oops;
-use crate::opt_str;
+use crate::Config;
 use crate::check_result;
 
 use std::process::Command;
 use std::fs::write;
 
-use toml::Value;
 use bincode::serde::encode_to_vec;
 use bincode::config::standard;
 use rustc_demangle::demangle;
 
-pub fn process(config: &Value) {
+pub fn process(config: &Config) {
     let stage = "serialize-nanocore-syms";
 
-    let build_dir = opt_str(config, &["build-dir"]);
+    let output_path = config.str("serialize-nanocore-syms.output-path");
+    let readelf = config.str("serialize-nanocore-syms.readelf");
 
-    let kernel_prefix = opt_str(config, &["prefixes", "kernel"]);
-    let readelf = opt_str(config, &["serialize-nanocore-syms", "readelf"]);
-    let arch = opt_str(config, &["arch"]);
-
-    let output_path = format!("{}/isofiles/modules/{}nano_core.serde", &build_dir, &kernel_prefix);
+    let nanocore_bin = config.str("nanocore-path");
 
     log!(stage, "extracting symbol information");
-
-    let nanocore_bin = format!("{}/nano_core/nano_core-{}.bin", &build_dir, arch);
 
     let result = Command::new(readelf)
         .arg("-W")

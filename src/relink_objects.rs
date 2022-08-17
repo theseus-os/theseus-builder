@@ -1,28 +1,24 @@
 use crate::log;
-use crate::opt_str;
+use crate::Config;
 use crate::run;
 use crate::list_dir;
 
 use std::sync::Arc;
 use std::fs::rename;
 
-use toml::Value;
 
 use rayon::prelude::*;
 
-pub fn process(config: &Value) {
+pub fn process(config: &Config) {
     let stage = "relink-objects";
 
-    let root = opt_str(config, &["theseus-root"]);
-    let build_dir = opt_str(config, &["build-dir"]);
+    let modules_dir = config.str("directories.modules");
 
-    let linker = Arc::new(opt_str(config, &["relink-objects", "linker"]));
-    let stripper = Arc::new(opt_str(config, &["relink-objects", "stripper"]));
+    let partial_relinking_script = Arc::new(config.str("relink-objects.partial-relinking-script"));
+    let linker = Arc::new(config.str("relink-objects.linker"));
+    let stripper = Arc::new(config.str("relink-objects.stripper"));
 
     log!(stage, "finding objects to relink");
-
-    let modules_dir = format!("{}/isofiles/modules", &build_dir);
-    let partial_relinking_script = Arc::new(format!("{}/cfg/partial_linking_combine_sections.ld", root));
 
     let mut handles = Vec::new();
 

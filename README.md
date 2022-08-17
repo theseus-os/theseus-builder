@@ -2,6 +2,19 @@
 
 This is not officially in use at the moment.
 
+A TOML configuration file is used. String values in this config file
+can reference other string values:
+
+```toml
+theseus-root = "../theseus"
+
+# target-name is defined in the default configuration, and can be overriden
+# target will be evaluated as "../theseus/../rust/x86_64-theseus.json"
+target = "{theseus-root}/../rust/{target-name}.json"
+```
+
+The default configuration can be found in `src/default.toml`.
+
 ### Steps to get it working
 
 a. In `config.toml` and `Cargo.toml`, set the correct path to your copy of theseus.
@@ -32,6 +45,7 @@ you can pass a comma-separated list of stage ranges:
 # default: all stages, once
 cargo run -r --
 cargo run -r -- -s ..
+cargo run -r -- -s discover..add-bootloader
 
 # only run "discover", to list crates in kernel/:
 cargo run -r -- -s discover discover=[ "kernel" ]
@@ -39,7 +53,7 @@ cargo run -r -- -s discover discover=[ "kernel" ]
 # run everything 5 times:
 cargo run -r -- -s ..,..,..,..,..
 
-# run "add-bootloader", run everything, and "add-bootloader" again:
+# run "add-bootloader", everything, and "add-bootloader" again:
 cargo run -r -- -s add-bootloader,..,add-bootloader
 
 # run "copy-crate-objects" and the next ones:
@@ -48,6 +62,8 @@ cargo run -r -- -s copy-crate-objects..
 # run from "build-cells" to "relink-rlibs", then from "strip-objects" to "add-bootloader":
 cargo run -r -- -s build-cells..relink-rlibs,strip-objects..add-bootloader
 ```
+
+Note: ranges are inclusive.
 
 ### Configuration overrides
 

@@ -1,22 +1,28 @@
 use crate::log;
-use crate::opt_str;
+use crate::Config;
 use crate::try_create_dir;
 
-use toml::Value;
 
-pub fn process(config: &Value) {
+pub fn process(config: &Config) {
     let stage = "directories";
 
-    let build_dir = opt_str(config, &["build-dir"]);
+    let build_dir = config.str("build-dir");
+    let nanocore_dir = config.str("directories.nanocore");
+    let isofiles_dir = config.str("directories.isofiles");
+    let modules_dir = config.str("directories.modules");
+    let deps_dir = config.str("directories.deps");
+    let target_dir = config.str("directories.target");
+    let extracted_rlibs_dir = config.str("directories.extracted-rlibs");
+    let debug_symbols_dir = config.str("directories.debug-symbols");
 
     log!(stage, "creating build directories");
 
-    try_create_dir(&format!("{}", &build_dir), false);
-    try_create_dir(&format!("{}/nano_core", &build_dir), false);
-    try_create_dir(&format!("{}/isofiles", &build_dir), false);
-    try_create_dir(&format!("{}/isofiles/modules", &build_dir), false);
-    try_create_dir(&format!("{}/deps", &build_dir), false);
-    try_create_dir(&format!("{}/target", &build_dir), false);
-    try_create_dir(&format!("{}/extracted_rlibs", &build_dir), false);
-    try_create_dir(&format!("{}/debug_symbols", &build_dir), false);
+    try_create_dir(&build_dir, false);
+    try_create_dir(&nanocore_dir, false);
+    try_create_dir(&isofiles_dir, false);
+    try_create_dir(&modules_dir, false);
+    try_create_dir(&deps_dir, false);
+    try_create_dir(&target_dir, false);
+    try_create_dir(&extracted_rlibs_dir, false);
+    try_create_dir(&debug_symbols_dir, false);
 }

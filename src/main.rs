@@ -12,8 +12,8 @@ use std::io::ErrorKind;
 use std::ffi::OsString;
 use std::mem::swap;
 
-use toml::Value;
 use toml::map::Map;
+use toml::Value;
 
 use pico_args::Arguments;
 
@@ -28,7 +28,7 @@ mod relink_objects;
 mod strip_objects;
 mod add_bootloader;
 
-const STAGES: &'static [fn(config: &Value)] = &[
+const STAGES: &'static [fn(config: &Config)] = &[
     discover::process,
     directories::process,
     build_cells::process,
@@ -104,6 +104,8 @@ fn main() {
 
         apply_overrides(&mut config, args.finish());
 
+        let config = Config::from(config);
+
         for group in groups.split(",") {
             let range = if group.contains("..") {
                 let mut stages = group.split("..");
@@ -119,6 +121,38 @@ fn main() {
                 processor(&config);
             }
         }
+    }
+}
+
+pub struct Config {
+    inner: Value,
+}
+
+impl Config {
+    fn bool(&self, key: &str) -> bool {
+        opt_bool(self.as_ref(), key)
+    }
+
+    fn str(&self, key: &str) -> String {
+        opt_str(self.as_ref(), key)
+    }
+
+    fn vec(&self, key: &str) -> Vec<String> {
+        opt_str_vec(self.as_ref(), key)
+    }
+}
+
+impl From<Value> for Config {
+    fn from(value: Value) -> Self {
+        Self {
+            inner: value,
+        }
+    }
+}
+
+impl AsRef<Value> for Config {
+    fn as_ref(&self) -> &Value {
+        &self.inner
     }
 }
 
@@ -269,57 +303,76 @@ fn list_dir<P: AsRef<Path> + Display>(stage: &str, path: P) -> Vec<(String, bool
     inner(&path).unwrap_or_else(err)
 }
 
-fn opt_default(path: &[&str]) -> Value {
+fn resolve_imports(config: &Value, string: &mut String) {
+    while let Some(i) = string.find('{') {
+        let (prefix, rem) = string.split_at(i);
+        let rem = &rem[1..];
+
+        if let Some(j) = rem.find('}') {
+            let (key, suffix) = rem.split_at(j);
+            let suffix = &suffix[1..];
+
+            let import = opt_str(config, &key);
+            *string = format!("{}{}{}", prefix, import, suffix);
+        } else {
+            oops!("config", "{:?} has an invalid import!", string);
+        }
+    }
+}
+
+fn opt_default(key: &str) -> Value {
     let mut config = &include_str!("defaults.toml").parse::<Value>().unwrap();
-    for key in path {
-        if let Some(value) = config.get(key) {
+    for part in key.split(".") {
+        if let Some(value) = config.get(part) {
             config = value;
         } else {
-            println!("missing option in config: {}", path.join("/"));
+            println!("missing option in config: {}", key);
             crate::die();
         }
     }
     config.clone()
 }
 
-pub fn opt(mut config: &Value, path: &[&str]) -> Value {
-    for key in path {
-        if let Some(value) = config.get(key) {
+pub fn opt(mut config: &Value, key: &str) -> Value {
+    for part in key.split(".") {
+        if let Some(value) = config.get(part) {
             config = value;
         } else {
-            return opt_default(path);
+            return opt_default(key);
         }
     }
     config.clone()
 }
 
-pub fn opt_bool(config: &Value, path: &[&str]) -> bool {
-    if let Value::Boolean(boolean) = opt(config, path) {
+pub fn opt_bool(config: &Value, key: &str) -> bool {
+    if let Value::Boolean(boolean) = opt(config, key) {
         boolean
     } else {
-        println!("wrong type: {} must be a boolean!", path.last().unwrap());
+        println!("wrong type: {} must be a boolean!", key);
         crate::die();
     }
 }
 
-pub fn opt_str(config: &Value, path: &[&str]) -> String {
-    if let Value::String(string) = opt(config, path) {
+pub fn opt_str(config: &Value, key: &str) -> String {
+    if let Value::String(mut string) = opt(config, key) {
+        resolve_imports(config, &mut string);
         string
     } else {
-        println!("wrong type: {} must be a string!", path.last().unwrap());
+        println!("wrong type: {} must be a string!", key);
         crate::die();
     }
 }
 
-pub fn opt_str_vec(config: &Value, path: &[&str]) -> Vec<String> {
+pub fn opt_str_vec(config: &Value, key: &str) -> Vec<String> {
     let crash = || -> ! {
-        println!("wrong type: {} must be an array!", path.last().unwrap());
+        println!("wrong type: {} must be an array!", key);
         crate::die()
     };
-    if let Value::Array(array) = opt(config, path) {
+    if let Value::Array(array) = opt(config, key) {
         let mut out = Vec::with_capacity(array.len());
         for item in array {
-            if let Value::String(string) = item {
+            if let Value::String(mut string) = item {
+                resolve_imports(config, &mut string);
                 out.push(string);
             } else {
                 crash();

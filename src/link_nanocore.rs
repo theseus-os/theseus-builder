@@ -1,26 +1,23 @@
 use crate::log;
-use crate::opt_str;
+use crate::Config;
 use crate::run;
 use crate::list_dir;
 
-use toml::Value;
 
-pub fn process(config: &Value) {
+pub fn process(config: &Config) {
     let stage = "link-nanocore";
 
-    let root = opt_str(config, &["theseus-root"]);
-    let build_dir = opt_str(config, &["build-dir"]);
-    let arch = opt_str(config, &["arch"]);
+    let nanocore_dir = config.str("directories.nanocore");
+    let arch = config.str("arch");
 
-    let target = opt_str(config, &["build-cells", "cargo-target-name"]);
-    let build_mode = opt_str(config, &["build-cells", "build-mode"]);
-    let static_lib = format!("{}/target/{}/{}/libnano_core.a", &build_dir, &target, &build_mode);
-
-    let linker = opt_str(config, &["link-nano-core", "linker"]);
+    let linker = config.str("link-nanocore.linker");
+    let static_lib = config.str("link-nanocore.static-lib-path");
+    let asm_sources_dir = config.str("link-nanocore.asm-sources-dir");
+    let nanocore_bin = config.str("nanocore-path");
+    let linker_script = config.str("link-nanocore.linker-script-path");
 
     log!(stage, "compiling assembly trampolines");
 
-    let asm_sources_dir = format!("{}/kernel/nano_core/src/boot/arch_{}", &root, arch);
     let mut asm_object_files = Vec::new();
 
     for (name, _is_dir) in list_dir(stage, &asm_sources_dir) {
@@ -29,7 +26,7 @@ pub fn process(config: &Value) {
         if split.next().is_some() {
             let entry = prefix.unwrap();
             let input = format!("{}/{}.asm", asm_sources_dir, entry);
-            let output = format!("{}/nano_core/asm_{}_{}.o", &build_dir, entry, arch);
+            let output = format!("{}/asm_{}_{}.o", &nanocore_dir, entry, arch);
 
             // todo: add cflags
             run(stage, "nasm", &[&[
@@ -48,16 +45,13 @@ pub fn process(config: &Value) {
 
     log!(stage, "linking nanocore");
 
-    let linker_script = format!("{}/linker_higher_half.ld", asm_sources_dir);
-    let output = format!("{}/nano_core/nano_core-{}.bin", &build_dir, arch);
-
     run(stage, &linker, &[
         &[
             "-n",
             "-T",
             &linker_script,
             "-o",
-            &output,
+            &nanocore_bin,
         ],
         &asm_object_files.iter().map(|f| f.as_str()).collect::<Vec<_>>(),
         &[ &static_lib ],

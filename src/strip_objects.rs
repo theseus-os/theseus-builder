@@ -1,32 +1,26 @@
 use crate::log;
-use crate::opt_str;
-use crate::opt_bool;
+use crate::Config;
 use crate::run;
 use crate::list_dir;
 
 use std::sync::Arc;
 use std::fs::copy;
 
-use toml::Value;
 
 use rayon::prelude::*;
 
-pub fn process(config: &Value) {
+pub fn process(config: &Config) {
     let stage = "strip-objects";
 
-    let build_dir = opt_str(config, &["build-dir"]);
-    let arch = opt_str(config, &["arch"]);
+    let nanocore_bin = config.str("nanocore-bin");
+    let nanocore_path = config.str("nanocore-path");
+    let modules_dir = config.str("directories.modules");
+    let dbg_dir = config.str("directories.debug-symbols");
 
-    let strip_nanocore = opt_bool(config, &["strip-objects", "strip-nanocore"]);
-    let stripper = Arc::new(opt_str(config, &["strip-objects", "stripper"]));
-
-    let nanocore_bin = format!("nano_core-{}.bin", &arch);
-    let nanocore_path = format!("{}/nano_core/{}", &build_dir, &nanocore_bin);
+    let strip_nanocore = config.bool("strip-objects.strip-nanocore");
+    let stripper = Arc::new(config.str("strip-objects.stripper"));
 
     log!(stage, "stripping objects");
-
-    let modules_dir = format!("{}/isofiles/modules", &build_dir);
-    let dbg_dir = format!("{}/debug_symbols", &build_dir);
 
     let mut handles = Vec::new();
 

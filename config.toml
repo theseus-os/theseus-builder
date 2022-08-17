@@ -1,12 +1,45 @@
 theseus-root = "../theseus"
+target = "{theseus-root}/../rust/{target-name}.json"
 
 [build-cells]
-cargo-target = "../rust/x86_64-theseus.json"
-cargo-target-name = "x86_64-theseus"
 toolchain = "theseus"
+cargo-flags = [ "-Z", "unstable-options" ]
+rust-flags = [
+    # Tell rustc to output the native object file for each crate,
+    # which avoids always having to unpack the crate's .rlib archive to extract the object files within.
+    # Note that we still do have to extract and partially link object files from .rlib archives for crates that
+    # use a build script to generate additional object files during build time.
+    "--emit=obj",
+
+    # enable debug info even for release builds
+    "-C debuginfo=2",
+
+    # using a large code model
+    "-C code-model=large",
+
+    # use static relocation model to avoid GOT-based relocation types and .got/.got.plt sections
+    "-C relocation-model=static",
+
+    # promote unused must-use types (like Result) to an error
+    "-D unused-must-use",
+
+    # As of Dec 31, 2018, this is needed to make loadable mode work, because otherwise, 
+    # some core generic function implementations won't exist in the object files.
+    # Details here: https://github.com/rust-lang/rust/pull/57268
+    # Relevant rusct commit: https://github.com/jethrogb/rust/commit/71990226564e9fe327bc9ea969f9d25e8c6b58ed#diff-8ad3595966bf31a87e30e1c585628363R8
+    # Either "trampolines" or "disabled" works here, not sure how they're different
+    "-Z merge-functions=disabled",
+
+    # This prevents monomorphized instances of generic functions from being shared across crates.
+    # It vastly simplifies the procedure of finding missing symbols in the crate loader,
+    # because we know that instances of generic functions will not be found in another crate
+    # besides the current crate or the crate that defines the function.
+    # As far as I can tell, this does not have a significant impact on object code size or performance.
+    "-Z share-generics=no",
+]
 
 [copy-crate-objects]
-extra-target-dirs = [ "../rust/build/x86_64-unknown-linux-gnu/stage2-std" ]
+extra-target-dirs = [ "{theseus-root}/../rust/build/x86_64-unknown-linux-gnu/stage2-std" ]
 
 [add-bootloader]
 bootloader = "limine"

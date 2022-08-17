@@ -1,46 +1,67 @@
 cargo = "cargo"
 arch = "x86_64"
 theseus-root = "."
-build-dir = "build"
+build-dir = "./build"
 discover = []
+output-iso = "{build-dir}/theseus-{arch}.iso"
+linker = "ld"
+stripper = "strip"
+target-name = "x86_64-theseus"
+target = "{directories.cfg}/{target-name}.json"
+build-mode = "release"
+nanocore-bin = "nano_core-{arch}.bin"
+nanocore-path = "{directories.nanocore}/{nanocore-bin}"
 
 [prefixes]
 kernel = "k#"
 applications = "a#"
 executables = "e#"
 
-[build-cells]
-# relative to theseus-root
-cargo-target = "../rust/x86_64-theseus.json"
-cargo-target-name = "x86_64-theseus"
-build-mode = "release"
-other-cargo-flags = []
-other-rust-flags = []
-# build-std = ["core", "alloc"]
-build-std = []
-build-std-features = ["compiler-builtins-mem"]
+[directories]
+kernel = "{theseus-root}/kernel"
+apps = "{theseus-root}/applications"
+cfg = "{theseus-root}/cfg"
+nanocore = "{build-dir}/nano_core"
+isofiles = "{build-dir}/isofiles"
+modules = "{directories.isofiles}/modules"
+deps = "{build-dir}/deps"
+target = "{build-dir}/target"
+extracted-rlibs = "{build-dir}/extracted_rlibs"
+debug-symbols = "{build-dir}/debug_symbols"
+sysroot = "{directories.deps}/sysroot/lib/rustlib/{target-name}/lib"
+target-deps = "{directories.target}/{target-name}/{build-mode}/deps"
 
-[link-nano-core]
-linker = "ld"
+[build-cells]
+manifest-path = "{theseus-root}/kernel/nano_core/Cargo.toml"
+cargo-flags = []
+rust-flags = []
+
+[link-nanocore]
+static-lib-path = "{directories.target}/{target-name}/{build-mode}/libnano_core.a"
+asm-sources-dir = "{theseus-root}/kernel/nano_core/src/boot/arch_{arch}"
+linker-script-path = "{link-nanocore.asm-sources-dir}/linker_higher_half.ld"
+linker = "{linker}"
 
 [serialize-nanocore-syms]
+output-path = "{directories.modules}/{prefixes.kernel}nano_core.serde"
 readelf = "readelf"
 
 [relink-rlibs]
-linker = "ld"
+linker = "{linker}"
 remove-rlibs-dirs = true
 
 [copy-crate-objects]
-extra-target-dirs = [ ]
+target-dirs = [ "{directories.target-deps}" ]
 extra-apps = [ "libtheseus" ]
 debug-crate-objects = false
 
 [relink-objects]
-linker = "ld"
-stripper = "strip"
+partial-relinking-script = "{directories.cfg}/partial_linking_combine_sections.ld"
+linker = "{linker}"
+stripper = "{stripper}"
 
 [strip-objects]
-stripper = "strip"
+stripper = "{stripper}"
 strip-nanocore = true
 
 [add-bootloader]
@@ -49,5 +70,8 @@ grub-mkrescue = "grub-mkrescue"
 limine-config = "built-in"
 limine-tarball = "https://github.com/limine-bootloader/limine/archive/3f6a3303434d07e4663544d35fc0beb1b7c26364.tar.gz"
 limine-subdir = "limine-3f6a3303434d07e4663544d35fc0beb1b7c26364"
+tarball-path = "{add-bootloader.extract-dir}.tar.gz"
+extract-dir = "{build-dir}/limine-prebuilt"
+expected-subdir = "{add-bootloader.extract-dir}/{add-bootloader.limine-subdir}"
 downloader = "wget"
 xorriso = "xorriso"
