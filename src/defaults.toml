@@ -81,3 +81,19 @@ extract-dir = "{build-dir}/limine-prebuilt"
 expected-subdir = "{add-bootloader.extract-dir}/{add-bootloader.limine-subdir}"
 downloader = "wget"
 xorriso = "xorriso"
+
+[run-qemu]
+qemu = "qemu-system-{arch}"
+extra-args = [
+    "-boot", "d",
+    "-no-reboot",
+    "-no-shutdown",
+    "-s",
+    "-serial", "mon:stdio",
+    "-serial", "mon:pty",
+    "-m", "512M",
+    "-smp", "4",
+    "-cpu", "Broadwell",
+    "-net", "none",
+    "-cdrom", "{output-iso}",
+]

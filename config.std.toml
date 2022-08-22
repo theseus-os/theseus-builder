@@ -1,30 +1,12 @@
 theseus-root = "../theseus"
-# arch = "aarch64"
-
-[add-bootloader]
-# bootloader = "limine"
-
-[run-qemu]
-# extra-args = [
-#     "-machine", "raspi3b",
-#     "-no-reboot",
-#     "-no-shutdown",
-#     "-s",
-#     "-serial", "mon:stdio",
-#     "-serial", "mon:pty",
-#     "-net", "none",
-#     "-drive", "file={output-iso},if=sd",
-# ]
+target = "../rust/{target-name}.json"
 
 [build-cells]
-toolchain = "nightly-2022-07-25"
-# manifest-path = "{theseus-root}/kernel/nano_core/Cargo.toml"
+toolchain = "theseus"
+manifest-path = "{theseus-root}/Cargo.toml"
 cargo-flags = [
     "--workspace",
-    "--features", "extract_boot_modules",
-    "-Z", "unstable-options",
-    "-Z", "build-std=core,alloc",
-    "-Z", "build-std-features=compiler-builtins-mem",
+    "--features", "extract_boot_modules"
 ]
 rust-flags = [
     # Tell rustc to output the native object file for each crate,
@@ -59,3 +41,9 @@ rust-flags = [
     # As far as I can tell, this does not have a significant impact on object code size or performance.
     "-Z share-generics=no",
 ]
+
+[copy-crate-objects]
+extra-target-dirs = [ "../rust/build/x86_64-unknown-linux-gnu/stage2-std" ]
+
+[add-bootloader]
+bootloader = "limine"

@@ -125,6 +125,6 @@ cargo run -r -- build-cells.build-std=[ "core" "alloc" ]
 | ☑ | `strip-objects` | [`Makefile::build::part-5`] |
 | ? | `save-build-params` | [`Makefile::build::part-4`] |
 | ☑ | `add-bootloader` | [`Makefile::grub` & `Makefile::limine`] |
-|  | `run-qemu` | starts qemu with the built disk image |
+| ☑ | `run-qemu` | starts qemu with the built disk image |
 |  | `write-bootable-usb` | writes the disk image to a usb drive using `dd` |
 |  | `boot-pxe` | copies the disk image to the tftpboot folder for network booting over PXE |

@@ -25,7 +25,6 @@ pub fn process(config: &Config) {
 
     for (name, _is_dir) in list_dir(stage, &deps_dir) {
         if name.starts_with("lib") && name.ends_with(".rlib") {
-            print!("checking {:60}\r", &name);
             let tmp_dir = format!("{}/{}", extracted_rlibs_dir, name);
             let path = format!("{}/{}", &deps_dir, &name);
 
@@ -37,7 +36,6 @@ pub fn process(config: &Config) {
             // however some have multiple object files
             // and these need a "partial linkage" step.
             if count > 2 {
-                print!("{:70}\r", "");
                 log!(stage, "relinking {}", &name);
 
                 try_create_dir(&tmp_dir, false);
@@ -71,6 +69,5 @@ pub fn process(config: &Config) {
         }
     }
 
-    print!("{:70}\r", "");
     log!(stage, "done relinking rlibs");
 }

@@ -29,6 +29,7 @@ mod copy_crate_objects;
 mod relink_objects;
 mod strip_objects;
 mod add_bootloader;
+mod run_qemu;
 
 pub const DEFAULT_CONFIG: &'static str = include_str!("defaults.toml");
 
@@ -44,6 +45,7 @@ const STAGES: &'static [fn(config: &Config)] = &[
     relink_objects::process,
     strip_objects::process,
     add_bootloader::process,
+    run_qemu::process,
 ];
 
 fn parse_stage(name: &str, last: bool) -> usize {
@@ -61,8 +63,9 @@ fn parse_stage(name: &str, last: bool) -> usize {
         "relink-objects"          => 8,
         "strip-objects"           => 9,
         "add-bootloader"          => 10,
+        "run-qemu"                => 11,
 
-        "" if last                => 10,
+        "" if last                => 11,
         _ => oops!("main", "unknown stage \"{}\"", name),
     }
 }
