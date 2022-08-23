@@ -97,8 +97,8 @@ fn main() {
         log!("main", "config file: {}", config_path);
 
         let path = Path::new(&config_path);
-        let path = path.canonicalize().unwrap();
-        let directory = path.parent().unwrap();
+        let config_path = path.canonicalize().unwrap();
+        let directory = config_path.parent().unwrap();
         log!("main", "moving to config's directory {:?}", directory);
         set_current_dir(directory).unwrap();
 
