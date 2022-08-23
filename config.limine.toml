@@ -2,7 +2,7 @@ theseus-root = "../theseus"
 # arch = "aarch64"
 
 [add-bootloader]
-# bootloader = "limine"
+bootloader = "limine"
 
 [run-qemu]
 # extra-args = [

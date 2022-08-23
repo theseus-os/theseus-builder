@@ -12,6 +12,7 @@ use std::io::ErrorKind;
 use std::ffi::OsString;
 use std::mem::swap;
 use std::env::set_current_dir;
+use std::env::var;
 
 use toml::map::Map;
 use toml::Value;
@@ -328,7 +329,16 @@ fn resolve_imports(config: &Value, string: &mut String) {
             let (key, suffix) = rem.split_at(j);
             let suffix = &suffix[1..];
 
-            let import = opt_str(config, &key);
+            let import = if let Some(key) = key.strip_prefix("env:") {
+                if let Ok(value) = var(key) {
+                    value
+                } else {
+                    println!("resolve_imports: environment variable {} is absent", key);
+                    crate::die();
+                }
+            } else {
+                opt_str(config, &key)
+            };
             *string = format!("{}{}{}", prefix, import, suffix);
         } else {
             oops!("config", "{:?} has an invalid import!", string);
@@ -336,7 +346,7 @@ fn resolve_imports(config: &Value, string: &mut String) {
     }
 }
 
-fn opt_default(key: &str) -> Value {
+pub fn opt_default(key: &str) -> Value {
     let mut config = &DEFAULT_CONFIG.parse::<Value>().unwrap();
     for part in key.split(".") {
         if let Some(value) = config.get(part) {
@@ -381,10 +391,11 @@ pub fn opt_str(config: &Value, key: &str) -> String {
 
 pub fn opt_str_vec(config: &Value, key: &str) -> Vec<String> {
     let crash = || -> ! {
-        println!("wrong type: {} must be an array!", key);
+        println!("wrong type: {} must be an array of strings!", key);
         crate::die()
     };
-    if let Value::Array(array) = opt(config, key) {
+    let value = opt(config, key);
+    if let Value::Array(array) = value {
         let mut out = Vec::with_capacity(array.len());
         for item in array {
             if let Value::String(mut string) = item {
@@ -394,8 +405,18 @@ pub fn opt_str_vec(config: &Value, key: &str) -> Vec<String> {
                 crash();
             }
         }
-        out
-    } else {
-        crash();
+        return out;
+    } else if let Value::Table(table) = value {
+        let key = table.get("from-env");
+        let delim = table.get("delimiter");
+        if let (Some(Value::String(key)), Some(Value::String(delim))) = (key, delim) {
+            if let Ok(value) = var(key) {
+                return value.split(delim).map(|s| s.into()).collect();
+            } else {
+                println!("opt_str_vec: environment variable {} is absent", key);
+                crate::die();
+            }
+        }
     }
+    crash();
 }

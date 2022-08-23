@@ -18,6 +18,8 @@ cargo run -r -- --config /build/config.toml
 The builder will execute all operations from the directory where this file is.
 Therefore, all paths contained by this config file are relative to its own path.
 
+#### Referencing other properties
+
 String values in this config file can reference other string values:
 
 ```toml
@@ -27,6 +29,27 @@ theseus-root = "../theseus"
 # target will be evaluated as "../theseus/../rust/x86_64-theseus.json"
 target = "{theseus-root}/../rust/{target-name}.json"
 ```
+
+#### Referencing environment variables
+
+String values in this config file can also reference environment variables:
+
+```toml
+# for strings, add "env:" before the environment variable
+arch = "{env:THESEUS_ARCH}"
+```
+
+It's also possible to do so with arrays, but then you must use this little hack:
+
+```
+# for arrays, use a table instead of an array and set these two special keys:
+run-qemu.extra-args = { from-env = "QEMU_ARGS", delimiter = "," }
+build-cells.cargo-args = { from-env = "CARGOFLAGS", delimiter = " " }
+```
+
+You must set both "from-env" and "delimiter" as strings, else the builder will fail.
+
+#### Default values
 
 The default values can be found in `src/default.toml`.
 

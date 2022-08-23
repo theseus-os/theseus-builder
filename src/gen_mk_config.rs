@@ -1,5 +1,5 @@
 use crate::log;
-use crate::opt;
+use crate::opt_default;
 use crate::oops;
 use crate::Config;
 use crate::DEFAULT_CONFIG;
@@ -22,7 +22,7 @@ pub fn process(config: &Config) {
 
     let mut generated = String::new();
     for key in keys {
-        let content = match opt(config.as_ref(), &key) {
+        let content = match opt_default(&key) {
             Value::String(_) => config.str(&key),
             Value::Boolean(_) => config.bool(&key).to_string(),
             Value::Array(_) => config.vec(&key).join(" "),
