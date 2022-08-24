@@ -89,39 +89,45 @@ fn main() {
             }
         }
 
-        let config_path = match args.value_from_str(["-c", "--config-file"]) {
-            Ok(path) => path,
-            _ => "config.toml".to_string(),
+        let mut value = if !args.contains(["-n", "--no-config"]) {
+            let config_path = match args.value_from_str(["-c", "--config-file"]) {
+                Ok(path) => path,
+                _ => "config.toml".to_string(),
+            };
+
+            log!("main", "config file: {}", config_path);
+
+            let path = Path::new(&config_path);
+            let config_path = path.canonicalize().unwrap();
+            let directory = config_path.parent().unwrap();
+            log!("main", "moving to config's directory {:?}", directory);
+            set_current_dir(directory).unwrap();
+
+            let cfg_string = match read_to_string(&config_path) {
+                Ok(cfg_string) => cfg_string,
+                Err(e) => oops!("main", "{}", e),
+            };
+
+            let value = match cfg_string.parse::<Value>() {
+                Ok(value) => value,
+                Err(e) => oops!("main", "{}", e),
+            };
+
+            log!("main", "configuration was parsed successfully");
+
+            value
+        } else {
+            Value::from(Map::new())
         };
-
-        log!("main", "config file: {}", config_path);
-
-        let path = Path::new(&config_path);
-        let config_path = path.canonicalize().unwrap();
-        let directory = config_path.parent().unwrap();
-        log!("main", "moving to config's directory {:?}", directory);
-        set_current_dir(directory).unwrap();
-
-        let cfg_string = match read_to_string(&config_path) {
-            Ok(cfg_string) => cfg_string,
-            Err(e) => oops!("main", "{}", e),
-        };
-
-        let mut config = match cfg_string.parse::<Value>() {
-            Ok(value) => value,
-            Err(e) => oops!("main", "{}", e),
-        };
-
-        log!("main", "configuration was parsed successfully");
 
         let groups = match args.value_from_str(["-s", "--stages"]) {
             Ok(arg) => arg,
             _ => "..".to_string(),
         };
 
-        apply_overrides(&mut config, args.finish());
+        apply_overrides(&mut value, args.finish());
 
-        let config = Config::from(config);
+        let config = Config::from(value);
 
         for group in groups.split(",") {
             let range = if group.contains("..") {

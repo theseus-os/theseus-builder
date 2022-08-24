@@ -15,6 +15,8 @@ cargo run -r -- -c /build/config.toml
 cargo run -r -- --config /build/config.toml
 ```
 
+Use option `-n` or `--no-config` to not use a config file.
+
 The builder will execute all operations from the directory where this file is.
 Therefore, all paths contained by this config file are relative to its own path.
 
