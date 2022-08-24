@@ -48,5 +48,5 @@ pub fn process(config: &Config) {
         });
     }
 
-    handles.par_iter().map(|f| f()).collect::<Vec<()>>();
+    handles.par_iter().for_each(|f| f());
 }

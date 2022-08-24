@@ -6,7 +6,6 @@ use crate::list_dir;
 use std::sync::Arc;
 use std::fs::rename;
 
-
 use rayon::prelude::*;
 
 pub fn process(config: &Config) {
@@ -51,7 +50,7 @@ pub fn process(config: &Config) {
         }
     }
 
-    handles.par_iter().map(|f| f()).collect::<Vec<()>>();
+    handles.par_iter().for_each(|f| f());
 
     log!(stage, "done relinking objects");
 }
