@@ -12,10 +12,10 @@ description = "Build and run Theseus OS"
 [dependencies]
 toml = "0.5.9"
 pico-args = "0.5.0"
-crate_metadata = { path = "../theseus/kernel/crate_metadata" }
-mod_mgmt = { path = "../theseus/kernel/mod_mgmt" }
-memory = { path = "../theseus/kernel/memory" }
-kernel_config = { path = "../theseus/kernel/kernel_config" }
+crate_metadata = { path = "../../kernel/crate_metadata" }
+mod_mgmt = { path = "../../kernel/mod_mgmt" }
+memory = { path = "../../kernel/memory" }
+kernel_config = { path = "../../kernel/kernel_config" }
 hashbrown = "0.11"
 serde = { version = "1.0", features = ["derive"] }
 rustc-demangle = "0.1.14"
